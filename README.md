@@ -4,13 +4,17 @@
 
 [![Version](https://img.shields.io/badge/version-3.1.0-blue.svg)](https://github.com/yourusername/PersonalExam)
 [![Python](https://img.shields.io/badge/python-3.8+-green.svg)](https://www.python.org/)
-[![License](https://img.shields.io/badge/license-OpenPangu%20Model%20License%20v1.0-blue.svg)](LICENSE)
+[![License](https://img.shields.io/badge/license-BUSL%201.1-orange.svg)](LICENSE)
 
 一个基于LLM和知识图谱协同的个性化出题系统，使用BKT算法、RAG引擎和OpenPangu模型，实现个性化的智能题目生成和推荐。
 
+**开发单位**: 深圳大数据研究院 (SRIBD) | **课题组**: AI系统及应用课题组
+
 **Powered by OpenPangu** - OpenPangu是华为技术有限公司的商标。
 
-**许可证**: 本项目采用 OPENPANGU MODEL LICENSE AGREEMENT VERSION 1.0 许可证。使用OpenPangu模型需遵守该许可协议的所有条款。
+**许可证**: 
+- **项目代码**: 本项目代码采用 **BUSL 1.1 (Business Source License 1.1)** 许可证，允许非商业使用，商业使用需要授权。
+- **OpenPangu模型**: 本项目使用的OpenPangu模型采用 OPENPANGU MODEL LICENSE AGREEMENT VERSION 1.0 许可证，需遵守该许可协议的所有条款。
 
 ## 📋 目录
 
@@ -459,22 +463,33 @@ PersonalExam/
 
 ## 📄 开源许可证
 
-### 项目许可证
+### 项目代码许可证
 
-**本项目采用 OPENPANGU MODEL LICENSE AGREEMENT VERSION 1.0 许可证**
+**本项目代码采用 BUSL 1.1 (Business Source License 1.1) 许可证**
 
-本项目基于OpenPangu模型构建，遵循OPENPANGU MODEL LICENSE AGREEMENT VERSION 1.0许可协议。该协议旨在以宽松的方式使用，并促进人工智能技术的进一步发展。
+BUSL 1.1 是一种源代码可见的许可证，允许：
+- ✅ **非商业使用**: 个人、教育、研究用途完全免费
+- ✅ **查看源代码**: 可以查看、复制、修改源代码
+- ✅ **分发**: 可以分发源代码（需保留版权声明）
+- ⚠️ **商业使用限制**: 商业使用需要获得授权许可
+
 
 完整的许可证文本请参阅 [LICENSE](LICENSE) 文件。
 
-### OpenPangu模型声明
+### OpenPangu模型许可证
 
 本项目使用了OpenPangu模型（openPanGu-Embedded-7B-V1.1）。OpenPangu是由华为技术有限公司（Huawei Technologies Co., Ltd.）发布的大型语言模型。
 
+**OpenPangu模型采用 OPENPANGU MODEL LICENSE AGREEMENT VERSION 1.0 许可证**
+
 **OpenPangu是华为技术有限公司的商标。**
 
-使用OpenPangu模型时，必须遵守OPENPANGU MODEL LICENSE AGREEMENT VERSION 1.0的所有条款和条件。有关详细信息，请参阅：
-- 许可证文件: [LICENSE](LICENSE)
+使用OpenPangu模型时，必须遵守OPENPANGU MODEL LICENSE AGREEMENT VERSION 1.0的所有条款和条件，包括：
+- 地理限制：不能在欧盟境内使用
+- 归属声明：必须包含OpenPangu的归属声明
+- 许可证通知：必须包含许可证副本或链接
+
+有关详细信息，请参阅：
 - OpenPangu官方仓库: https://ai.gitcode.com/ascend-tribe/openpangu-embedded-1b-model
 
 ### 第三方开源软件
@@ -537,12 +552,17 @@ PersonalExam/
 
 **重要**: 使用本项目时，必须遵守以下许可证要求：
 
-1. **OpenPangu模型许可证**: 必须遵守OPENPANGU MODEL LICENSE AGREEMENT VERSION 1.0的所有条款
+1. **项目代码许可证 (BUSL 1.1)**: 
+   - 非商业使用：允许个人、教育、研究用途
+   - 商业使用：需要获得授权许可
+
+2. **OpenPangu模型许可证**: 必须遵守OPENPANGU MODEL LICENSE AGREEMENT VERSION 1.0的所有条款
    - 必须包含OpenPangu的归属声明
    - 必须包含许可证通知
    - 遵守OpenPangu商标使用规定
+   - 不能在欧盟境内使用
 
-2. **第三方开源软件**: 请遵守所有相关开源软件的许可证条款
+3. **第三方开源软件**: 请遵守所有相关开源软件的许可证条款
 
 详细信息请参考：
 - 项目许可证: [LICENSE](LICENSE)
@@ -551,12 +571,46 @@ PersonalExam/
 
 ### 致谢
 
+本项目由**深圳大数据研究院 (SRIBD)** 的**AI系统及应用课题组**开发和维护。
+
 感谢所有开源社区和贡献者，他们的工作使本项目成为可能。
 
 特别感谢：
+- **深圳大数据研究院 (SRIBD)** - 为本项目提供支持和资源
+- **AI系统及应用课题组** - 项目开发团队
 - **华为技术有限公司** - 提供OpenPangu模型
 - **北京智源人工智能研究院 (BAAI)** - 提供BGE嵌入模型
 - **Hugging Face** - 提供Transformers库和模型平台
+
+### 引用说明
+
+如果您在研究中使用了本项目，请引用：
+
+**中文引用格式**：
+```
+基于LLM和知识图谱协同的个性化出题系统. 
+AI系统及应用课题组, 深圳大数据研究院 (SRIBD), 2025.
+https://github.com/yourusername/PersonalExam
+```
+
+**英文引用格式**：
+```
+Personalized Question Generation System Based on LLM and Knowledge Graph Collaboration.
+AI System and Application Research Group, Shenzhen Research Institute of Big Data (SRIBD), 2025.
+https://github.com/yourusername/PersonalExam
+```
+
+**BibTeX格式**：
+```bibtex
+@software{personalexam2025,
+  title = {基于LLM和知识图谱协同的个性化出题系统},
+  author = {AI系统及应用课题组},
+  organization = {深圳大数据研究院 (SRIBD)},
+  year = {2025},
+  url = {https://github.com/yourusername/PersonalExam},
+  note = {Personalized Question Generation System Based on LLM and Knowledge Graph Collaboration}
+}
+```
 
 ## 🤝 贡献指南
 

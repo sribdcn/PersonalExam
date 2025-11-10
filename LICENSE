@@ -1,118 +1,70 @@
-OPENPANGU MODEL LICENSE AGREEMENT VERSION 1.0
+Business Source License 1.1
 
-Copyright (c) 2024 Huawei Technologies Co., Ltd.
+Copyright (c) 2025 AI系统及应用课题组@SRIBD
 
-This License Agreement (the "Agreement") governs the use of the OpenPangu model 
-and related materials (collectively, the "Model") provided by Huawei Technologies 
-Co., Ltd. ("Huawei" or "Licensor").
+本项目由深圳大数据研究院 (SRIBD) 的AI系统及应用课题组开发和维护。
 
-By downloading, installing, copying, or otherwise using the Model, you agree to 
-be bound by the terms of this Agreement. If you do not agree to the terms of this 
-Agreement, do not download, install, copy, or use the Model.
+================================================================================
+Additional Use Grant
 
-1. DEFINITIONS
+Subject to the terms and conditions of this Business Source License (the
+"License"), Licensor hereby grants to any person who obtains a copy of this
+software and associated documentation files (the "Software"), a non-exclusive,
+non-transferable license to use, copy, modify, and distribute the Software
+subject to the following conditions:
 
-1.1 "Model" or "openPangu" means the OpenPangu large language model and related 
-    software provided by Huawei, including but not limited to trained model weights, 
-    parameters (including optimizer states), accompanying source code and scripts.
+1. The above copyright notice and this permission notice shall be included in
+   all copies or substantial portions of the Software.
 
-1.2 "Derivative Works" or "Derivative Models" means all modifications to the Model, 
-    works based upon the Model, and any other derivative works of the Model.
+2. The Software may NOT be used for commercial purposes without explicit
+   written permission from the Licensor. "Commercial purposes" means:
+   - Any use of the Software for which a fee is charged
+   - Any use of the Software by a commercial entity
+   - Any use of the Software that generates revenue
+   - Any use of the Software as part of a commercial product or service
 
-1.3 "You" or "Your" means the individual or legal entity exercising permissions 
-    granted by this Agreement and/or using the Model for any purpose.
+3. The Software may be used for:
+   - Personal, non-commercial use
+   - Educational and research purposes
+   - Internal use within non-commercial organizations
 
-1.4 "Third Party" means any individual or legal entity that is not under common 
-    control with Us or You.
+================================================================================
+Important Notes
 
-2. GRANT OF LICENSE
+1. **OpenPangu Model License**: This project uses the OpenPangu model, which is
+   licensed under the OPENPANGU MODEL LICENSE AGREEMENT VERSION 1.0. The use
+   of the OpenPangu model is subject to its own license terms, including:
+   - Geographic restrictions (not for use in the European Union)
+   - Attribution requirements
+   - Trademark restrictions
+   
+   Please refer to the OpenPangu model license for complete terms:
+   https://ai.gitcode.com/ascend-tribe/openpangu-embedded-1b-model/blob/main/LICENSE
 
-2.1 Subject to the terms and conditions of this Agreement, Huawei hereby grants 
-    You a worldwide, non-exclusive, non-transferable, royalty-free license to:
-    
-    (a) Use the Model for research, development, and commercial purposes;
-    (b) Modify and create Derivative Works based on the Model;
-    (c) Distribute the Model and Derivative Works, provided that You comply with 
-        the requirements set forth in Section 3.
+2. **Third-Party Dependencies**: This project includes third-party open-source
+   software, each with its own license. Please refer to NOTICE and
+   OPEN_SOURCE_LICENSES.md for complete information.
 
-2.2 This license is granted on a perpetual basis, unless terminated in accordance 
-    with the terms of this Agreement.
+3. **Commercial Licensing**: For commercial use of this Software, please
+   contact the Licensor to obtain a commercial license.
 
-3. CONDITIONS AND RESTRICTIONS
+================================================================================
+Disclaimer of Warranty
 
-3.1 Geographic Restriction: You represent and warrant that You will not, directly 
-    or indirectly, access, download, install, run, deploy, integrate, modify, or 
-    otherwise use the Model within the territory of the European Union.
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
 
-3.2 Attribution: You must include the following attribution notice in any 
-    distribution of the Model or Derivative Works:
-    
-    "This work uses the OpenPangu model, which is licensed under the OPENPANGU 
-    MODEL LICENSE AGREEMENT VERSION 1.0. OpenPangu is a trademark of Huawei 
-    Technologies Co., Ltd."
+================================================================================
+Contact Information
 
-3.3 License Notice: You must include a copy of this Agreement or a link to this 
-    Agreement in any distribution of the Model or Derivative Works.
+For questions regarding this License or commercial licensing, please contact:
+AI系统及应用课题组@SRIBD
 
-3.4 Trademark: "OpenPangu" is a trademark of Huawei Technologies Co., Ltd. You 
-    may not use this trademark except as required for attribution under Section 3.2.
+================================================================================
 
-3.5 No Warranty: THE MODEL IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, 
-    EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF 
-    MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
-
-3.6 Limitation of Liability: IN NO EVENT SHALL HUAWEI BE LIABLE FOR ANY CLAIM, 
-    DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR 
-    OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE MODEL OR THE USE 
-    OR OTHER DEALINGS IN THE MODEL.
-
-4. INTELLECTUAL PROPERTY
-
-4.1 Huawei retains all right, title, and interest in and to the Model, including 
-    all intellectual property rights therein.
-
-4.2 You retain all right, title, and interest in and to Your Derivative Works, 
-    subject to Huawei's rights in the underlying Model.
-
-5. TERMINATION
-
-5.1 This Agreement and the license granted hereunder will terminate automatically 
-    if You fail to comply with any term or condition of this Agreement.
-
-5.2 Upon termination, You must immediately cease all use of the Model and destroy 
-    all copies of the Model in Your possession or control.
-
-6. GENERAL PROVISIONS
-
-6.1 This Agreement constitutes the entire agreement between You and Huawei 
-    regarding the Model and supersedes all prior agreements and understandings.
-
-6.2 This Agreement shall be governed by and construed in accordance with the laws 
-    of the People's Republic of China.
-
-6.3 If any provision of this Agreement is held to be invalid or unenforceable, 
-    the remaining provisions shall remain in full force and effect.
-
-7. CONTACT INFORMATION
-
-For questions regarding this Agreement, please contact:
-Huawei Technologies Co., Ltd.
-Email: [contact information]
-Website: https://www.huawei.com
-
----
-
-IMPORTANT NOTICE:
-
-This License Agreement is designed to allow for broad use of the Model while 
-promoting the further development of artificial intelligence technology. By using 
-the Model, You acknowledge that You have read, understood, and agree to be bound 
-by the terms of this Agreement.
-
-For the most current version of this license, please refer to:
-https://ai.gitcode.com/ascend-tribe/openpangu-embedded-1b-model/blob/main/LICENSE
-
----
-
-END OF LICENSE AGREEMENT
-
+END OF LICENSE

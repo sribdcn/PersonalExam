@@ -2,9 +2,21 @@
 
 本文档列出了本项目使用的所有开源软件（包括直接依赖和间接依赖）及其对应的开源协议。
 
-**重要**: 本项目采用 **OPENPANGU MODEL LICENSE AGREEMENT VERSION 1.0** 许可证。
+**项目信息**:
+- **开发单位**: 深圳大数据研究院 (SRIBD)
+- **课题组**: AI系统及应用课题组
+- **年份**: 2025
 
-本项目基于OpenPangu模型构建，使用OpenPangu模型需遵守OPENPANGU MODEL LICENSE AGREEMENT VERSION 1.0许可协议。完整的许可证文本请参阅项目根目录的 [LICENSE](LICENSE) 文件。
+**重要**: 本项目代码采用 **BUSL 1.1 (Business Source License 1.1)** 许可证。
+
+**项目代码许可证说明**:
+- 许可证类型: BUSL 1.1 (Business Source License 1.1)
+- 允许使用: 非商业用途（个人、教育、研究）
+- 商业使用: 需要获得授权许可
+- 完整许可证文本: 请参阅项目根目录的 [LICENSE](LICENSE) 文件
+
+**OpenPangu模型许可证**:
+本项目使用的OpenPangu模型采用 OPENPANGU MODEL LICENSE AGREEMENT VERSION 1.0 许可证，需遵守该许可协议的所有条款和条件。
 
 **最后更新**: 2025年（基于 requirements.txt 实际依赖）
 
@@ -373,15 +385,24 @@
 
 ## ⚠️ 重要注意事项
 
-### 项目许可证
+### 项目代码许可证
 
-**本项目采用 OPENPANGU MODEL LICENSE AGREEMENT VERSION 1.0 许可证**
+**本项目代码采用 BUSL 1.1 (Business Source License 1.1) 许可证**
 
-本项目基于OpenPangu模型构建，必须遵守OPENPANGU MODEL LICENSE AGREEMENT VERSION 1.0的所有条款和条件。该协议旨在以宽松的方式使用，并促进人工智能技术的进一步发展。
+BUSL 1.1 是一种源代码可见的许可证，主要特点：
 
-**关键要求**:
-- ✅ 允许研究、开发和商业使用
-- ✅ 允许修改和创建衍生作品
+**允许的使用**:
+- ✅ 非商业使用（个人、教育、研究）
+- ✅ 查看、复制、修改源代码
+- ✅ 分发源代码（需保留版权声明）
+
+**商业使用限制**:
+- ⚠️ 商业使用需要获得授权许可
+- ⚠️ 商业使用需要联系版权所有者获得许可
+
+**OpenPangu模型许可证**:
+本项目使用的OpenPangu模型采用 OPENPANGU MODEL LICENSE AGREEMENT VERSION 1.0 许可证，需遵守该许可协议的所有条款和条件，包括：
+- ⚠️ 地理限制：不能在欧盟境内使用
 - ⚠️ 必须包含OpenPangu的归属声明
 - ⚠️ 必须包含许可证通知
 - ⚠️ OpenPangu是华为技术有限公司的商标，使用时需遵守商标使用规定
@@ -411,11 +432,18 @@
    - 来源: GitHub
    - 建议查阅: https://github.com/refi64/PyExt
 
+### 项目代码许可证
+
+**本项目代码** 使用 **BUSL 1.1 (Business Source License 1.1)** 许可证。
+
+- 允许非商业使用，商业使用需要授权
+- 完整的许可证文本请参阅项目根目录的 [LICENSE](LICENSE) 文件
+
 ### OpenPangu模型许可证
 
 **OpenPangu模型 (openPanGu-Embedded-7B-V1.1)** 使用 **OPENPANGU MODEL LICENSE AGREEMENT VERSION 1.0**。
 
-这是本项目的核心许可证，所有使用本项目的用户必须遵守该许可协议。完整的许可证文本请参阅项目根目录的 [LICENSE](LICENSE) 文件。
+使用OpenPangu模型必须遵守该许可协议的所有条款和条件，包括地理限制、归属声明等要求。
 
 ## 📝 许可证合规建议
 
