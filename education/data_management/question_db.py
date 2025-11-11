@@ -5,8 +5,6 @@ Copyright (c) 2025 AI系统及应用课题组@SRIBD
 基于LLM和知识图谱协同的个性化出题系统 (PersonalExam)
 Personalized Question Generation System Based on LLM and Knowledge Graph Collaboration
 
-数据管理模块 - 增强版
-支持知识点大类和小类的检索
 """
 
 import json
@@ -19,7 +17,6 @@ logger = logging.getLogger(__name__)
 
 
 class EnhancedQuestionDatabase:
-    """增强版题库数据库"""
     
     def __init__(self, db_path: str):
         self.db_path = Path(db_path)
@@ -94,15 +91,7 @@ class EnhancedQuestionDatabase:
                                minor_point: Optional[str] = None,
                                difficulty_range: Optional[tuple] = None,
                                limit: Optional[int] = None) -> List[Dict[str, Any]]:
-        """
-        多条件筛选题目
-        
-        Args:
-            major_point: 知识点大类
-            minor_point: 知识点小类
-            difficulty_range: 难度范围 (min, max)
-            limit: 最大返回数量
-        """
+
         filtered = self.questions.copy()
         
         if major_point:

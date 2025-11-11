@@ -5,7 +5,7 @@ Copyright (c) 2025 AI系统及应用课题组@SRIBD
 基于LLM和知识图谱协同的个性化出题系统 (PersonalExam)
 Personalized Question Generation System Based on LLM and Knowledge Graph Collaboration
 
-智能题目选择器 - 基于RAG和知识图谱（优化备用选择策略）
+智能题目选择器 - 基于RAG和知识图谱
 使用盘古7B从检索结果中选择最合适的题目
 """
 
@@ -255,8 +255,8 @@ ID: [题目ID数字]
         
         降级策略：
         1. 精确匹配：major + minor + difficulty
-        2. 大类匹配：major + difficulty（忽略minor）
-        3. 大类匹配：major（忽略difficulty）
+        2. 大类匹配：major + difficulty
+        3. 大类匹配：major
         4. 最后备用：任意未使用的题目
         
         Args:

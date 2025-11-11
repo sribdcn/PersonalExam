@@ -22,8 +22,15 @@ KG_GRAPH_PATH = DATA_DIR / "knowledge_graph.html"
 DATA_DIR.mkdir(exist_ok=True)
 
 # ==================== 模型路径配置 ====================
-PANGU_MODEL_PATH = "/opt/pangu/openPangu-Embedded-7B-V1.1"  
-BGE_M3_MODEL_PATH = "/home/weitianyu/bge-small-zh-v1.5"  
+PANGU_MODEL_PATH = os.getenv(
+    "PANGU_MODEL_PATH",
+    str(MODELS_DIR / "openPangu-Embedded-7B-V1.1")  
+)
+
+BGE_M3_MODEL_PATH = os.getenv(
+    "BGE_MODEL_PATH",
+    str(MODELS_DIR / "bge-small-zh-v1.5")   
+)  
 
 # ==================== 盘古7B模型配置 ====================
 PANGU_MODEL_CONFIG = {

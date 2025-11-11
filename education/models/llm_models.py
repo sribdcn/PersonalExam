@@ -85,7 +85,6 @@ class PanGuModel:
             raise RuntimeError("设备不可用，系统终止")
     
     def _get_next_device(self) -> str:
-        """获取下一个用于推理的设备（负载均衡）"""
         if len(self.devices) == 1:
             return self.devices[0]
         
@@ -214,15 +213,7 @@ class PanGuModel:
             return f"{self.system_prompt}\n\nUser: {user_prompt}\n\nAssistant:"
     
     def _parse_pangu_output(self, output_text: str) -> str:
-        """
-        解析盘古7B的输出，提取实际内容
-        
-        Args:
-            output_text: 模型原始输出
-            
-        Returns:
-            处理后的内容
-        """
+
         try:
             # 盘古7B使用特殊token分隔思维和输出
             if "[unused17]" in output_text:
@@ -340,17 +331,6 @@ class PanGuModel:
 
 
 def create_llm_model(model_type: str, model_path: str, config: Dict[str, Any]) -> PanGuModel:
-    """
-    工厂函数:创建LLM模型实例（单例模式，避免重复加载）
-    
-    Args:
-        model_type: 模型类型（保留参数兼容性）
-        model_path: 模型路径
-        config: 模型配置
-        
-    Returns:
-        盘古模型实例
-    """
     import os
     
     # 使用单例模式，避免重复加载

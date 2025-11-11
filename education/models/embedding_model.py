@@ -6,7 +6,6 @@ Copyright (c) 2025 AI系统及应用课题组@SRIBD
 Personalized Question Generation System Based on LLM and Knowledge Graph Collaboration
 
 嵌入模型接口模块
-优先使用盘古7B的嵌入功能，备用BGE-M3模型
 """
 
 import torch
@@ -19,7 +18,7 @@ logger = logging.getLogger(__name__)
 
 
 class PanGuEmbedding:
-    """盘古7B嵌入模型（如果支持）"""
+    """盘古7B嵌入模型"""
     
     def __init__(self, model_path: str, config: dict):
         self.model_path = model_path
@@ -127,7 +126,6 @@ class PanGuEmbedding:
 
 
 class BGE_M3_Embedding:
-    """BGE-M3嵌入模型"""
     
     def __init__(self, model_path: str, config: dict):
         self.model_path = model_path
@@ -228,10 +226,7 @@ class MockEmbedding:
 
 
 def create_embedding_model(model_path: str, config: dict):
-    """
-    创建嵌入模型
-    优先尝试使用盘古7B的嵌入功能，失败则使用BGE
-    """
+
     import os
     
     # 检查是否启用盘古嵌入
@@ -250,7 +245,7 @@ def create_embedding_model(model_path: str, config: dict):
         try:
             return BGE_M3_Embedding(model_path, config)
         except Exception as e:
-            logger.warning(f"BGE-M3加载失败: {e}，使用模拟模型")
+            logger.warning(f"BGE加载失败: {e}，使用模拟模型")
             return MockEmbedding(model_path, config)
     else:
         logger.warning(f"嵌入模型路径不存在: {model_path}, 使用模拟模型")
@@ -259,7 +254,7 @@ def create_embedding_model(model_path: str, config: dict):
 
 def lightrag_embedding_func(texts: Union[str, List[str]], 
                            embedding_model) -> List[List[float]]:
-    """LightRAG兼容的嵌入函数"""
+
     embeddings = embedding_model.encode(texts)
     return embeddings.tolist()
 

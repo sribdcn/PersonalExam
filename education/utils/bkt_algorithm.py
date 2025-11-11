@@ -6,7 +6,6 @@ Copyright (c) 2025 AI系统及应用课题组@SRIBD
 Personalized Question Generation System Based on LLM and Knowledge Graph Collaboration
 
 贝叶斯知识追踪(BKT)算法模块 - 细粒度知识点版本
-支持知识点小类级别的精细追踪
 """
 
 import logging
@@ -33,7 +32,7 @@ class BKTParameters:
 
 @dataclass
 class StudentState:
-    """学生状态记录（细粒度版本）"""
+    """学生状态记录"""
     student_id: str
     knowledge_point_major: str      # 知识点大类
     knowledge_point_minor: str      # 知识点小类
@@ -51,7 +50,7 @@ class StudentState:
 
 
 class EnhancedBKT:
-    """增强版贝叶斯知识追踪（支持细粒度知识点）"""
+    """增强版贝叶斯知识追踪"""
     
     def __init__(self, default_params: Optional[BKTParameters] = None,
                  storage_path: str = "./data/student_states.json"):
@@ -61,7 +60,7 @@ class EnhancedBKT:
         self.student_states: Dict[str, Dict[str, Dict[str, StudentState]]] = defaultdict(lambda: defaultdict(dict))
         
         self._load_states()
-        logger.info(f"✅ 增强版BKT算法初始化完成（细粒度知识点追踪）")
+        logger.info(f"✅ 增强版BKT算法初始化完成")
     
     def _load_states(self):
         """加载学生状态"""
