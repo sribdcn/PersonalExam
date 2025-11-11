@@ -2,8 +2,8 @@
 
 **Personalized Question Generation System Based on LLM and Knowledge Graph Collaboration**
 
-[![Version](https://img.shields.io/badge/version-3.1.0-blue.svg)](https://github.com/yourusername/PersonalExam)
-[![Python](https://img.shields.io/badge/python-3.8+-green.svg)](https://www.python.org/)
+[![Version](https://img.shields.io/badge/version-3.1.0-blue.svg)](https://git.bookug.cc/star-aisl/PersonalExam)
+[![Python](https://img.shields.io/badge/python-3.11.12-green.svg)](https://www.python.org/)
 [![License](https://img.shields.io/badge/license-BUSL%201.1-orange.svg)](LICENSE)
 
 一个基于LLM和知识图谱协同的个性化出题系统，使用BKT算法、RAG引擎和OpenPangu模型，实现个性化的智能题目生成和推荐。
@@ -84,7 +84,7 @@ graph TB
     end
     
     subgraph 硬件层["硬件层"]
-        NPU["昇腾910B NPU"]
+        NPU["昇腾910B2 NPU"]
     end
     
     GradioUI --> SystemCore
@@ -151,7 +151,7 @@ graph LR
     end
     
     subgraph 硬件加速["硬件加速"]
-        NPU["昇腾910B NPU"]
+        NPU["昇腾910B2 NPU"]
     end
     
     Gradio --> PyTorch
@@ -210,74 +210,61 @@ flowchart TD
 
 ### 硬件要求
 
-- **CPU**: 推荐8核以上
-- **内存**: 推荐32GB以上
-- **存储**: 至少50GB可用空间（用于模型文件和Docker镜像）
-- **NPU**: 昇腾910B NPU（可选，用于加速推理，需要宿主机支持）
+
+#### 环境配置（参考）
+- **CPU**: Kunpeng-920处理器
+- **存储**: 196GB总容量（建议至少100GB可用空间用于模型文件和Docker镜像）
+- **NPU**: 昇腾910B2 NPU
 
 ### 软件要求
 
-- **操作系统**: Linux (推荐 Ubuntu 20.04+)
-- **Docker**: 20.10+ (推荐使用Docker容器化部署)
-- **Docker Compose**: 可选（如果使用docker-compose）
-- **昇腾CANN**: 6.0+ (如果使用NPU，需要在宿主机安装)
-- **CUDA**: 可选（如果使用GPU）
+- **操作系统**: Linux (推荐 Ubuntu 22.04.5 LTS，容器内使用 Ubuntu 22.04.5 LTS)
+- **Python**: 3.11.12 (容器内版本)
+- **Docker**: 18.09.0+ (宿主机版本，推荐使用Docker容器化部署)
+- **昇腾CANN**: 23.0.6 (如果使用NPU，需要在宿主机安装，容器内驱动版本 23.0.6)
 
-### 模型文件
+### 部署环境
 
-- **盘古7B模型**: 需要从华为昇腾社区下载
-  - 路径: `/opt/pangu/openPangu-Embedded-7B-V1.1`
-  - 参考: https://gitcode.com/ascend-tribe
-
-- **BGE-small-zh-v1.5**: 需要从Hugging Face或BAAI下载
-  - 路径: `/home/weitianyu/bge-small-zh-v1.5`
-  - 参考: https://github.com/FlagOpen/FlagEmbedding
-
-## 🚀 快速开始
-
-### 1. 克隆项目
+#### 创建容器
 
 ```bash
-git clone https://github.com/yourusername/PersonalExam.git
-cd PersonalExam
+docker run -dit --net=host \
+  --name docker_person_exam \
+  --device /dev/davinci6 \
+  --device /dev/davinci_manager \
+  --device /dev/devmm_svm \
+  --device /dev/hisi_hdc \
+  -v /usr/local/dcmi:/usr/local/dcmi \
+  -v /usr/local/bin/npu-smi:/usr/local/bin/npu-smi \
+  -v /usr/local/Ascend/driver/lib64/:/usr/local/Ascend/driver/lib64/ \
+  -v /usr/local/Ascend/driver/version.info:/usr/local/Ascend/driver/version.info \
+  -v /etc/ascend_install.info:/etc/ascend_install.info \
+  -v /opt/pangu:/opt/pangu \
+  -v /home:/home \
+  quay.io/ascend/cann:pangu-8.1.rc1-910b-py3.11
 ```
 
-### 2. 使用Docker运行
+### 2. 复制代码到容器内部
 
-本项目使用Docker容器化部署，无需创建虚拟环境。
+代码需要先上传到SSH服务器，然后复制到容器内。
+
+#### 步骤1: 上传代码到SSH服务器
+
+使用 `你喜欢的工具` 将代码上传到远程服务器：
+
+#### 步骤2: 复制代码到容器内
+
+在SSH服务器上，将代码复制到容器的 `/app` 目录（标准应用目录）：
 
 ```bash
-# 构建Docker镜像
-docker build -t personal-exam:latest .
-
-# 运行Docker容器
-docker run -d \
-  --name personal-exam \
-  -p 7860:7860 \
-  -v $(pwd)/education/data:/app/education/data \
-  -v $(pwd)/education/logs:/app/education/logs \
-  --device=/dev/davinci0 \  # 如果使用昇腾NPU，挂载NPU设备
-  --device=/dev/davinci_manager \
-  --device=/dev/devmm_svm \
-  --device=/dev/hisi_hdc \
-  -v /usr/local/Ascend/driver:/usr/local/Ascend/driver \
-  personal-exam:latest
-
-# 查看容器日志
-docker logs -f personal-exam
-
-# 停止容器
-docker stop personal-exam
-
-# 启动已停止的容器
-docker start personal-exam
+# 复制代码到容器内
+docker cp /home/xxx/PersonalExam/. docker_person_exam:/app/ # xxx为你上传的目录
 ```
 
-**注意**: 
-- 如果使用昇腾NPU，需要挂载NPU设备（`--device`参数）
-- 需要挂载昇腾驱动目录（`-v /usr/local/Ascend/driver`）
-- 模型文件路径需要在容器内可访问，建议使用volume挂载
-- requirements.txt 已包含 torch-npu (2.5.1.post1)
+**注意**：
+- 容器内代码路径: `/app/education/`
+- 数据目录: `/app/education/data/`（可通过volume挂载持久化）
+- 日志目录: `/app/education/logs/`（可通过volume挂载持久化）
 
 ### 3. 配置模型路径
 
@@ -314,7 +301,11 @@ docker run -d \
 
 默认模型路径：
 - 盘古7B模型: `/opt/pangu/openPangu-Embedded-7B-V1.1`
-- BGE嵌入模型: `/home/weitianyu/bge-small-zh-v1.5`
+- BGE嵌入模型: `/home/weitianyu/bge-small-zh-v1.5`（或根据实际部署路径配置）
+
+**远程部署配置**：
+- 容器内代码路径: `/app/education/`（应用运行目录）
+- 模型文件通过volume挂载: `/opt/pangu:/opt/pangu`，确保容器内可访问
 
 ### 4. 准备题库数据
 
@@ -350,7 +341,7 @@ education/data/question_database_2.json
 
 ```bash
 # 进入运行中的容器
-docker exec -it personal-exam bash
+docker exec -it docker_person_exam /bin/bash
 
 # 在容器内启动系统
 cd /app/education
@@ -369,7 +360,7 @@ PANGU_MODEL_CONFIG = {
     "max_new_tokens": 32768,
     "temperature": 0.7,
     "top_p": 0.9,
-    "device": "npu",  # 或 "cuda" / "cpu"
+    "device": "npu",
 }
 
 # 智能出题配置
@@ -582,22 +573,26 @@ BUSL 1.1 是一种源代码可见的许可证，允许：
 - **北京智源人工智能研究院 (BAAI)** - 提供BGE嵌入模型
 - **Hugging Face** - 提供Transformers库和模型平台
 
-### 引用说明
+### 引用和致谢
 
-如果您在研究中使用了本项目，请引用：
+**重要声明**：如果您的研究、工作或项目中使用了本项目，请引用并致谢 **深圳大数据研究院 (SRIBD)** 和 **AI系统及应用课题组**。
+
+#### 引用格式
+
+如果您在研究中使用了本项目，请使用以下格式引用：
 
 **中文引用格式**：
 ```
 基于LLM和知识图谱协同的个性化出题系统. 
 AI系统及应用课题组, 深圳大数据研究院 (SRIBD), 2025.
-https://github.com/yourusername/PersonalExam
+https://git.bookug.cc/star-aisl/PersonalExam
 ```
 
 **英文引用格式**：
 ```
 Personalized Question Generation System Based on LLM and Knowledge Graph Collaboration.
 AI System and Application Research Group, Shenzhen Research Institute of Big Data (SRIBD), 2025.
-https://github.com/yourusername/PersonalExam
+https://git.bookug.cc/star-aisl/PersonalExam
 ```
 
 **BibTeX格式**：
@@ -607,9 +602,25 @@ https://github.com/yourusername/PersonalExam
   author = {AI系统及应用课题组},
   organization = {深圳大数据研究院 (SRIBD)},
   year = {2025},
-  url = {https://github.com/yourusername/PersonalExam},
+  url = {https://git.bookug.cc/star-aisl/PersonalExam},
   note = {Personalized Question Generation System Based on LLM and Knowledge Graph Collaboration}
 }
+```
+
+#### 致谢示例
+
+在您的论文、报告或项目中，请包含以下致谢内容：
+
+**中文致谢**：
+```
+本研究/工作使用了"基于LLM和知识图谱协同的个性化出题系统"。
+感谢深圳大数据研究院 (SRIBD) 和 AI系统及应用课题组提供该项目。
+```
+
+**英文致谢**：
+```
+This research/work uses the "Personalized Question Generation System Based on LLM and Knowledge Graph Collaboration".
+We thank the Shenzhen Research Institute of Big Data (SRIBD) and the AI System and Application Research Group for providing this project.
 ```
 
 ## 🤝 贡献指南
@@ -632,7 +643,7 @@ https://github.com/yourusername/PersonalExam
 
 ### 报告问题
 
-如果发现问题，请在 [Issues](https://github.com/yourusername/PersonalExam/issues) 中报告，包括：
+如果发现问题，请在 [Issues](https://git.bookug.cc/star-aisl/PersonalExam/issues) 中报告，包括：
 - 问题描述
 - 复现步骤
 - 预期行为
@@ -645,20 +656,6 @@ https://github.com/yourusername/PersonalExam
 
 A: 是的，本项目使用Docker容器化部署。Docker提供了更好的环境隔离和依赖管理，无需手动配置Python虚拟环境。
 
-### Q: 如何构建Docker镜像？
-
-A: 使用 `docker build -t personal-exam:latest .` 命令。确保项目根目录包含Dockerfile和requirements.txt。
-
-### Q: 系统需要NPU吗？
-
-A: NPU不是必需的。系统可以在CPU上运行，但NPU可以显著加速模型推理。如果使用NPU，需要在运行Docker容器时挂载NPU设备（`--device`参数）。
-
-### Q: 如何在Docker容器中访问模型文件？
-
-A: 有几种方式：
-1. 使用volume挂载：`-v /host/path:/container/path`
-2. 将模型文件包含在Docker镜像中
-3. 使用环境变量配置模型路径
 
 ### Q: 如何添加新的题目？
 
@@ -686,10 +683,21 @@ A: 目前报告在Web界面显示。可以复制报告内容或使用浏览器�
 ### Q: 容器启动失败怎么办？
 
 A: 检查以下几点：
-1. 查看容器日志：`docker logs personal-exam`
-2. 确认端口7860未被占用
+1. 查看容器日志：`docker logs personal-exam`（本地）或 `docker logs docker_person_exam`（远程）
+2. 确认端口7860未被占用（本地部署）
 3. 确认NPU设备正确挂载（如果使用NPU）
 4. 确认模型文件路径正确
+5. 远程部署时，确认所有volume挂载路径存在且可访问
+
+### Q: 如何进行远程SSH部署？
+
+A: 远程SSH部署步骤：
+1. 使用SSH密钥连接到远程服务器：`ssh -i .cursor/your_ssh_key your_username@your_server_ip`
+2. 上传代码到服务器的 `/home/your_username/Documents/project/PersonalExam` 目录
+3. 创建容器（参考"创建容器"章节）
+4. 复制代码到容器内：`docker cp /home/your_username/Documents/project/PersonalExam/. docker_person_exam:/app/`
+5. 进入容器：`docker exec -it docker_person_exam /bin/bash`
+6. 在容器内运行：`cd /app/education && python main.py`
 
 ## 📝 更新日志
 
@@ -717,7 +725,6 @@ A: 检查以下几点：
 ## 📞 联系方式
 
 - **项目维护者**: AI系统及应用课题组@SRIBD
-- **Issues**: [GitHub Issues链接]
 
 ## 📚 相关资源
 

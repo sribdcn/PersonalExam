@@ -18,7 +18,7 @@ logger = logging.getLogger(__name__)
 
 
 class SmartEducationSystem:
-    """智能教育评估系统核心（本地RAG版）"""
+    """基于LLM和知识图谱协同的个性化出题系统核心（本地RAG版）"""
     
     def __init__(self, config):
         self.config = config

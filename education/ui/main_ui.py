@@ -29,10 +29,10 @@ class SmartEducationUI:
     def create_interface(self) -> gr.Blocks:
         """创建UI界面"""
         
-        with gr.Blocks(title="教育评估", theme=gr.themes.Soft()) as interface:
+        with gr.Blocks(title="个性化出题系统", theme=gr.themes.Soft()) as interface:
             
             gr.Markdown("""
-            # 🧠 教育评估系统
+            # 🧠 基于LLM和知识图谱协同的个性化出题系统
             """)
             
             with gr.Tabs():

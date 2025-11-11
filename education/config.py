@@ -5,7 +5,7 @@ Copyright (c) 2025 AI系统及应用课题组@SRIBD
 基于LLM和知识图谱协同的个性化出题系统 (PersonalExam)
 Personalized Question Generation System Based on LLM and Knowledge Graph Collaboration
 
-教育评估系统配置文件 - 本地RAG版本
+基于LLM和知识图谱协同的个性化出题系统配置文件 - 本地RAG版本
 移除LightRAG依赖，使用本地向量检索
 """
 
