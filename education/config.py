@@ -15,6 +15,7 @@ from pathlib import Path
 # ==================== 项目路径配置 ====================
 PROJECT_ROOT = Path(__file__).parent
 DATA_DIR = PROJECT_ROOT / "data"
+MODELS_DIR = PROJECT_ROOT / "models"
 QUESTION_DB = DATA_DIR / "question_database_2.json"
 KG_GRAPH_PATH = DATA_DIR / "knowledge_graph.html"
 

@@ -21,14 +21,19 @@
 - [功能特性](#-功能特性)
 - [技术架构](#-技术架构)
 - [系统要求](#-系统要求)
-- [快速开始](#-快速开始)
-- [配置说明](#-配置说明)
+  - [硬件要求](#硬件要求)
+  - [软件要求](#软件要求)
+  - [部署环境](#部署环境)
+- [配置说明](#️-配置说明)
 - [使用指南](#-使用指南)
 - [项目结构](#-项目结构)
 - [开源许可证](#-开源许可证)
 - [贡献指南](#-贡献指南)
 - [常见问题](#-常见问题)
 - [更新日志](#-更新日志)
+- [联系方式](#-联系方式)
+- [相关资源](#-相关资源)
+- [Star History](#-star-history)
 
 ## ✨ 功能特性
 
@@ -266,46 +271,23 @@ docker cp /home/xxx/PersonalExam/. docker_person_exam:/app/ # xxx为你上传的
 - 数据目录: `/app/education/data/`（可通过volume挂载持久化）
 - 日志目录: `/app/education/logs/`（可通过volume挂载持久化）
 
-### 3. 配置模型路径
+### 3. 下载bge-small-zh-v1.5模型
 
-**方式1: 在Dockerfile中配置**（推荐）
-
-在构建镜像时，确保模型文件已包含在镜像中，或通过volume挂载。
-
-**方式2: 通过环境变量配置**
-
-在运行容器时设置环境变量：
+模型地址：https://huggingface.co/BAAI/bge-small-zh-v1.5
 
 ```bash
-docker run -d \
-  --name personal-exam \
-  -p 7860:7860 \
-  -e PANGU_MODEL_PATH=/opt/pangu/openPangu-Embedded-7B-V1.1 \
-  -e BGE_MODEL_PATH=/home/weitianyu/bge-small-zh-v1.5 \
-  -v /path/to/pangu:/opt/pangu \
-  -v /path/to/bge:/home/weitianyu/bge-small-zh-v1.5 \
-  personal-exam:latest
+curl -LsSf https://hf.co/cli/install.sh | bash # Make sure the hf CLI is installed
+
+# 方式1: 直接下载到项目目录（推荐）
+# 下载到项目 models 目录，与配置文件中的默认路径一致
+hf download BAAI/bge-small-zh-v1.5 --local-dir education/models/bge-small-zh-v1.5
+
+# 方式2: 使用默认位置下载
+# 默认下载到: ~/.cache/huggingface/hub/
+# 下载后需要配置 BGE_MODEL_PATH 环境变量指向实际路径
+hf download BAAI/bge-small-zh-v1.5
 ```
 
-**方式3: 编辑配置文件**
-
-如果需要修改配置，可以挂载配置文件：
-
-```bash
-docker run -d \
-  --name personal-exam \
-  -p 7860:7860 \
-  -v $(pwd)/education/config.py:/app/education/config.py \
-  personal-exam:latest
-```
-
-默认模型路径：
-- 盘古7B模型: `/opt/pangu/openPangu-Embedded-7B-V1.1`
-- BGE嵌入模型: `/home/weitianyu/bge-small-zh-v1.5`（或根据实际部署路径配置）
-
-**远程部署配置**：
-- 容器内代码路径: `/app/education/`（应用运行目录）
-- 模型文件通过volume挂载: `/opt/pangu:/opt/pangu`，确保容器内可访问
 
 ### 4. 准备题库数据
 
@@ -333,18 +315,33 @@ education/data/question_database_2.json
 
 ### 5. 启动系统
 
-如果使用Docker，系统会在容器启动时自动运行。
+默认模型路径（通过环境变量配置）：
+- 盘古7B模型: 通过 `PANGU_MODEL_PATH` 环境变量配置，默认 `/opt/pangu/openPangu-Embedded-7B-V1.1`
+- BGE嵌入模型: 通过 `BGE_MODEL_PATH` 环境变量配置
+  - **本地开发环境默认值**: `education/models/bge-small-zh-v1.5`
+  - **Docker容器环境默认值**: `/app/education/models/bge-small-zh-v1.5`
+  - 如果未设置环境变量，将使用上述默认路径
 
-访问: `http://localhost:7860`
-
-**或者手动启动**（如果需要在容器内手动运行）:
+**启动**（如果需要在容器内手动运行）:
 
 ```bash
 # 进入运行中的容器
 docker exec -it docker_person_exam /bin/bash
+cd /app
+
+# 安装依赖（使用国内镜像源，速度更快）
+pip install -r requirements.txt -i https://pypi.tuna.tsinghua.edu.cn/simple
+
+# 如果遇到torch/vllm相关依赖冲突，可以跳过已安装的包:
+# pip install -r requirements.txt --ignore-installed torch torch-npu torchaudio torchvision vllm vllm-ascend transformers -i https://pypi.tuna.tsinghua.edu.cn/simple
 
 # 在容器内启动系统
 cd /app/education
+
+# 设置环境变量（根据实际路径调整）
+export PANGU_MODEL_PATH=/opt/pangu/openPangu-Embedded-7B-V1.1
+export BGE_MODEL_PATH=/home/liqinsi/bge-small-zh-v1.5
+
 python main.py
 ```
 
@@ -388,6 +385,8 @@ export BGE_MODEL_PATH="/path/to/bge/model"
 ```
 
 ## 📖 使用指南
+
+> 补充功能介绍，加截图
 
 ### 开始智能测评
 
