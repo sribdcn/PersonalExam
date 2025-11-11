@@ -2,11 +2,9 @@
 """
 Copyright (c) 2025 AI系统及应用课题组@SRIBD
 
-基于LLM和知识图谱协同的个性化出题系统 (PersonalExam)
 Personalized Question Generation System Based on LLM and Knowledge Graph Collaboration
 
 本地RAG引擎 - 基于向量检索和知识图谱
-不依赖OpenAI API，使用本地嵌入模型和盘古7B
 """
 
 import logging
@@ -24,7 +22,6 @@ class LocalRAGEngine:
     
     def __init__(self, embedding_model, llm_model):
         """
-        初始化RAG引擎
         
         Args:
             embedding_model: BGE嵌入模型
@@ -41,19 +38,14 @@ class LocalRAGEngine:
         logger.info("✅ 本地RAG引擎初始化完成")
     
     def build_question_index(self, questions: List[Dict[str, Any]]):
-        """
-        构建题目索引
-        
-        Args:
-            questions: 题目列表
-        """
+
         logger.info(f"🔄 正在为 {len(questions)} 道题目构建向量索引...")
         
         self.question_texts = []
         self.question_metadata = []
         
         for q in questions:
-            # 构建题目的文本表示（用于检索）
+            # 构建题目的文本表示
             text = self._format_question_for_indexing(q)
             self.question_texts.append(text)
             
@@ -93,19 +85,7 @@ class LocalRAGEngine:
                         minor_point: Optional[str] = None,
                         difficulty_range: Optional[Tuple[float, float]] = None,
                         top_k: int = 5) -> List[Dict[str, Any]]:
-        """
-        检索相关题目
-        
-        Args:
-            query: 查询文本（如："初等代数 二次方程 中等难度"）
-            major_point: 知识点大类过滤
-            minor_point: 知识点小类过滤
-            difficulty_range: 难度范围 (min, max)
-            top_k: 返回前k个结果
-            
-        Returns:
-            检索到的题目列表，每个包含 {'question': {...}, 'score': float}
-        """
+
         if self.question_embeddings is None:
             logger.error("❌ 题目索引未构建")
             return []
@@ -147,16 +127,7 @@ class LocalRAGEngine:
         return results
     
     def extract_entities_and_relations(self, text_context: str) -> Dict[str, Any]:
-        """
-        使用盘古7B从文本中提取实体和关系
-        
-        Args:
-            text_context: 上下文文本
-            
-        Returns:
-            {'entities': [...], 'relations': [...]}
-        """
-        # 优化提示词，要求更简洁的输出
+
         prompt = f"""分析以下数学题目，提取关键的知识点实体。
 
 题目内容：
