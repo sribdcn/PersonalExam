@@ -128,6 +128,10 @@ SMART_QUESTION_CONFIG = {
     
     # RAG检索参数
     "rag_top_k": 5,               # RAG检索返回的题目数量
+    
+    # 题目选择优化
+    "use_llm_selector": False,     # 是否使用LLM进行题目选择（默认关闭以提升速度）
+    "question_radar_default": 0.5, # 雷达图默认难度/掌握度（无数据时）
 }
 
 # ==================== 评估配置 ====================

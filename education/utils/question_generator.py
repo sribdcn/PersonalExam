@@ -20,7 +20,7 @@ logger = logging.getLogger(__name__)
 class SmartQuestionSelector:
     """智能题目选择器"""
     
-    def __init__(self, rag_engine, llm_model, question_db):
+    def __init__(self, rag_engine, llm_model, question_db, config: Optional[Dict[str, Any]] = None):
         """
         初始化选择器
         
@@ -32,6 +32,8 @@ class SmartQuestionSelector:
         self.rag_engine = rag_engine
         self.llm_model = llm_model
         self.question_db = question_db
+        self.config = config or {}
+        self.use_llm_selector = self.config.get("use_llm_selector", False)
         
         logger.info("✅ 智能题目选择器初始化完成")
     
@@ -124,7 +126,13 @@ class SmartQuestionSelector:
             logger.info("✅ 只有1道候选题，直接选择")
             return candidate_questions[0]['question']
         
-        # 构建简洁的候选题目列表
+        # 当禁用LLM选择或候选题较少时，优先使用启发式规则
+        if not self.use_llm_selector:
+            selected = self._heuristic_selection(candidate_questions, student_mastery)
+            if selected:
+                return selected
+        
+        # 构建简洁的候选题目列表（用于LLM）
         candidates_text = ""
         for i, item in enumerate(candidate_questions, 1):
             q = item['question']
@@ -365,9 +373,9 @@ ID: [题目ID数字]
             return None
 
 
-def create_question_selector(rag_engine, llm_model, question_db) -> SmartQuestionSelector:
+def create_question_selector(rag_engine, llm_model, question_db, config: Optional[Dict[str, Any]] = None) -> SmartQuestionSelector:
     """创建题目选择器"""
-    return SmartQuestionSelector(rag_engine, llm_model, question_db)
+    return SmartQuestionSelector(rag_engine, llm_model, question_db, config)
 
 
 if __name__ == "__main__":

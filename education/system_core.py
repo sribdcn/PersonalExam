@@ -105,7 +105,8 @@ class SmartEducationSystem:
             self.question_selector = create_question_selector(
                 self.rag_engine,
                 self.pangu_model,
-                self.question_db
+                self.question_db,
+                self.config.SMART_QUESTION_CONFIG
             )
             
             # 9. 初始化可视化
