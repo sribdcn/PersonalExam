@@ -133,39 +133,87 @@ class PersonalizedStudentEvaluator:
             return None, response
     
     def _strict_answer_check(self, question: Dict[str, Any], student_answer: str) -> bool:
-        """备用严格答案检查逻辑"""
-        correct_answer = question.get('答案', '').lower().strip()
-        student_answer_lower = student_answer.lower().strip()
-        
+        """备用严格答案检查逻辑（增强版，支持集合/顺序无关/间隔等价）"""
+        correct_answer = (question.get('答案') or '').lower().strip()
+        student_answer_lower = (student_answer or '').lower().strip()
+
         if not correct_answer or not student_answer_lower:
             return False
-        
+
+        # 1) 直接规范化字符串等价（去标点空白）
         correct_clean = re.sub(r'[\s\.,;!?，。；！？、]', '', correct_answer)
         student_clean = re.sub(r'[\s\.,;!?，。；！？、]', '', student_answer_lower)
-        
         if correct_clean == student_clean:
             return True
-        
+
+        # 2) 解集/多解场景：按常见分隔符拆分并做集合比较（忽略顺序）
+        def split_solutions(text: str):
+            # 去掉变量名与等号，如 x=2 -> 2
+            text = re.sub(r'[a-zA-Z]\s*=', '', text)
+            parts = re.split(r'\s*(?:或|and|,|，|；|;|、|/|\bor\b|\||\s+或是\s+)\s*', text)
+            parts = [p for p in parts if p]
+            return parts
+
+        corr_parts = split_solutions(correct_answer)
+        stu_parts = split_solutions(student_answer_lower)
+
+        # 如果标准答案明显包含多个部分（如“2 或 3”），进行集合等价判断
+        if len(corr_parts) >= 2:
+            # 优先用数值集合比较；若取不到数值，再用规范化文本集合比较
+            corr_nums = self._extract_numbers(' '.join(corr_parts))
+            stu_nums = self._extract_numbers(' '.join(stu_parts))
+            if corr_nums:
+                def to_float_list(nums):
+                    vals = []
+                    for n in nums:
+                        try:
+                            vals.append(float(n))
+                        except Exception:
+                            pass
+                    return vals
+
+                c_vals = to_float_list(corr_nums)
+                s_vals = to_float_list(stu_nums)
+                if c_vals and s_vals:
+                    # 逐一匹配（容差）
+                    unmatched = []
+                    for c in c_vals:
+                        if not any(abs(c - s) < 1e-2 for s in s_vals):
+                            unmatched.append(c)
+                    if not unmatched and len(s_vals) >= len(c_vals):
+                        return True
+            # 文本集合比较（去空白/标点）
+            norm = lambda t: re.sub(r'[\s\.,;!?，。；！？、]', '', t)
+            c_set = {norm(p) for p in corr_parts}
+            s_set = {norm(p) for p in stu_parts}
+            if c_set.issubset(s_set):
+                return True
+
+        # 3) 关键要点覆盖与区间处理
         key_info = self._extract_key_information(correct_answer)
         missing_info = []
         for info in key_info:
             if not self._contains_info(student_answer_lower, info):
                 missing_info.append(info)
-        
         if missing_info:
             return False
-        
+
+        # 4) 数值一致性（容差比较）
         correct_numbers = self._extract_numbers(correct_answer)
         student_numbers = self._extract_numbers(student_answer_lower)
-        
         if correct_numbers:
             for num in correct_numbers:
-                if not any(abs(float(num) - float(snum)) < 0.01 for snum in student_numbers):
+                try:
+                    val = float(num)
+                except Exception:
+                    continue
+                if not any(abs(val - float(snum)) < 1e-2 for snum in student_numbers):
                     return False
-        
-        if len(student_clean) < len(correct_clean) * 0.5:
+
+        # 5) 文本相似度与长度下限
+        if len(student_clean) < max(6, int(len(correct_clean) * 0.5)):
             return False
-        
+
         return True
     
     def _extract_key_information(self, text: str) -> List[str]:

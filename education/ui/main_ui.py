@@ -10,6 +10,7 @@ Personalized Question Generation System Based on LLM and Knowledge Graph Collabo
 import gradio as gr
 import logging
 from typing import Dict, Any
+import plotly.graph_objects as go
 
 logger = logging.getLogger(__name__)
 
@@ -91,12 +92,13 @@ class SmartEducationUI:
             
             current_kp_text = gr.Markdown("**当前知识点:** 等待加载...")
             
-            # 题目显示
+            # 题目显示 + 题目小雷达图
             question_text = gr.Textbox(
                 label="📝 题目",
                 lines=6,
                 interactive=False
             )
+            question_radar_plot = gr.Plot(label="题目画像（难度/掌握度）")
             
             # 答案输入
             answer_input = gr.Textbox(
@@ -131,7 +133,8 @@ class SmartEducationUI:
             outputs=[
                 session_state, quiz_area, report_area, question_text, 
                 progress_text, current_kp_text, answer_input, profile_display,
-                submit_answer_btn, next_question_btn, feedback_box, ai_status
+                submit_answer_btn, next_question_btn, feedback_box, ai_status,
+                question_radar_plot
             ]
         )
         
@@ -150,7 +153,8 @@ class SmartEducationUI:
             outputs=[
                 session_state, question_text, progress_text, current_kp_text,
                 feedback_box, submit_answer_btn, next_question_btn,
-                answer_input, quiz_area, report_area, report_display, ai_status
+                answer_input, quiz_area, report_area, report_display, ai_status,
+                question_radar_plot
             ]
         )
         
@@ -159,7 +163,8 @@ class SmartEducationUI:
             outputs=[
                 session_state, quiz_area, report_area, answer_input,
                 submit_answer_btn, next_question_btn, feedback_box,
-                progress_text, current_kp_text, question_text, ai_status
+                progress_text, current_kp_text, question_text, ai_status,
+                question_radar_plot
             ]
         )
     
@@ -326,6 +331,7 @@ class SmartEducationUI:
                 gr.update(visible=False),  # next_question_btn
                 gr.update(visible=False),  # feedback_box
                 ai_status_md
+                , self._generate_question_radar(session)
             )
         except Exception as e:
             logger.error(f"开始测评失败: {e}")
@@ -334,6 +340,7 @@ class SmartEducationUI:
                 f"错误: {str(e)}", "进度: 0/0", "知识点: N/A", "", 
                 "暂无数据", gr.update(), gr.update(), gr.update(visible=False),
                 "**🤖 AI状态:** 错误"
+                , None
             )
     
     def _submit_answer(self, session, answer):
@@ -407,7 +414,8 @@ class SmartEducationUI:
                 gr.update(visible=False), gr.update(visible=True), 
                 gr.update(visible=False), "", 
                 gr.update(visible=True), gr.update(visible=False), "",
-                "**🤖 AI状态:** 待命中"
+                "**🤖 AI状态:** 待命中",
+                None
             )
         
         try:
@@ -430,7 +438,8 @@ class SmartEducationUI:
                     gr.update(visible=False),    # quiz_area
                     gr.update(visible=True),     # report_area
                     report,
-                    "**🤖 AI状态:** 报告已生成（盘古7B）"
+                    "**🤖 AI状态:** 报告已生成（盘古7B）",
+                    None
                 )
             
             # 加载下一题
@@ -456,6 +465,7 @@ class SmartEducationUI:
                 gr.update(visible=False),    # report_area
                 "",                          # report_display
                 ai_status
+                , self._generate_question_radar(session)
             )
         except Exception as e:
             logger.error(f"加载下一题失败: {e}")
@@ -464,7 +474,8 @@ class SmartEducationUI:
                 gr.update(visible=False), gr.update(visible=True), 
                 gr.update(visible=False), "", 
                 gr.update(visible=True), gr.update(visible=False), "",
-                "**🤖 AI状态:** 错误"
+                "**🤖 AI状态:** 错误",
+                None
             )
     
     def _restart_assessment(self):
@@ -481,9 +492,62 @@ class SmartEducationUI:
             "### 📊 进度: 0/0",            # progress_text
             "**当前知识点:** 请开始测评",  # current_kp_text
             "",                             # question_text (清空题目)
-            "**🤖 AI状态:** 待命中"        # ai_status
+            "**🤖 AI状态:** 待命中",       # ai_status
+            None                            # question_radar_plot
         )
     
+    def _generate_question_radar(self, session):
+        """生成题目小雷达图：难度/掌握度/近期准确率"""
+        try:
+            major = session['current_major_point']
+            minor = session['current_minor_point']
+            question = session['current_question']
+
+            # 获取BKT状态
+            state = self.system.bkt_algorithm.get_student_state(session['student_id'], major, minor)
+            mastery = float(state.mastery_prob)
+            # 近期准确率
+            recent_acc = 0.0
+            if hasattr(self.system.bkt_algorithm, '_calculate_recent_accuracy'):
+                recent_acc = self.system.bkt_algorithm._calculate_recent_accuracy(state)
+            # 题目难度（0-1）
+            difficulty = float(question.get('难度', 0.5))
+
+            categories = ['题目难度', '学生掌握度', '近期准确率']
+            values = [difficulty, mastery, recent_acc]
+
+            fig = go.Figure()
+            fig.add_trace(go.Scatterpolar(
+                r=values,
+                theta=categories,
+                fill='toself',
+                name='概览',
+                line_color='rgb(99, 102, 241)',
+                fillcolor='rgba(99, 102, 241, 0.25)',
+                line_width=2
+            ))
+            fig.add_trace(go.Scatterpolar(
+                r=[0.7] * len(categories),
+                theta=categories,
+                fill='none',
+                name='目标线(70%)',
+                line_color='rgb(255, 99, 71)',
+                line_dash='dash',
+                line_width=1
+            ))
+            fig.update_layout(
+                polar=dict(
+                    radialaxis=dict(visible=True, range=[0, 1], tickmode='linear', tick0=0, dtick=0.2)
+                ),
+                showlegend=False,
+                margin=dict(t=20, b=20, l=20, r=20),
+                height=260,
+                template="plotly_white",
+                title=dict(text=f"{major}/{minor}", x=0.5, font=dict(size=12))
+            )
+            return fig
+        except Exception:
+            return None
     def _analyze_student(self, student_id: str):
         """分析学生（美化版）"""
         try:
