@@ -341,9 +341,9 @@ export PANGU_MODEL_PATH=/opt/pangu/openPangu-Embedded-7B-V1.1
 
 python main.py
 ```
-![下载](education\image\416d63f2ace0064e16c1de10565bd9f6.png)
+![下载](./education\image\416d63f2ace0064e16c1de10565bd9f6.png)
 
-![下载](education\image\3a017ea219588d140d900805130dd2cd.png)
+![下载](./education\image\3a017ea219588d140d900805130dd2cd.png)
 > 服务将会运行在: http://localhost:7860（默认端口）。如果要修改端口，请在 `education/config.py` 中修改 `UI_CONFIG['port']` 的值，或通过环境变量 `GRADIO_SERVER_PORT` 设置。
 
 ## ⚙️ 配置说明
