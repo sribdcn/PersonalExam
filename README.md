@@ -265,7 +265,7 @@ docker run -dit --net=host \
 # 复制代码到容器内
 docker cp /home/xxx/PersonalExam/. docker_person_exam:/app/ # xxx为你上传的目录
 ```
-
+![显示](education\image\8ebce37f131e58737321f7b3559c7c81.png)
 **注意**：
 - 容器内代码路径: `/app/education/`
 - 数据目录: `/app/education/data/`（可通过volume挂载持久化）
@@ -329,7 +329,6 @@ education/data/question_database_2.json
 docker exec -it docker_person_exam /bin/bash
 cd /app
 
-
 # 安装依赖（使用国内镜像源，速度更快）
 # 由于torch torch-npu torchaudio torchvision vllm vllm-ascend这几个包已经在docker中存在，安装是可能造成版本冲突，故不在requirements.txt中申明
 pip install -r requirements.txt -i https://pypi.tuna.tsinghua.edu.cn/simple
@@ -342,7 +341,9 @@ export PANGU_MODEL_PATH=/opt/pangu/openPangu-Embedded-7B-V1.1
 
 python main.py
 ```
+![下载](education\image\416d63f2ace0064e16c1de10565bd9f6.png)
 
+![下载](education\image\3a017ea219588d140d900805130dd2cd.png)
 > 服务将会运行在: http://localhost:7860（默认端口）。如果要修改端口，请在 `education/config.py` 中修改 `UI_CONFIG['port']` 的值，或通过环境变量 `GRADIO_SERVER_PORT` 设置。
 
 ## ⚙️ 配置说明
@@ -387,7 +388,7 @@ export BGE_MODEL_PATH="/path/to/bge/model"
 ## 📖 使用指南
 
 > 补充功能介绍，加截图
-
+![初始](education\image\微信图片_2025111211331860_1.jpg)
 ### 开始智能测评
 
 1. **输入学生ID**: 在"智能测评"标签页输入学生ID（如 `student_001`）
@@ -395,7 +396,9 @@ export BGE_MODEL_PATH="/path/to/bge/model"
 3. **开始测评**: 点击"开始智能测评"按钮
 4. **答题**: 系统会根据学生掌握度智能推荐题目，学生答题后获得即时反馈
 5. **查看报告**: 测评完成后，系统会生成个性化的评估报告
+![2](education\image\微信图片_2025111211331860_2.jpg)
 
+![2](education\image\微信图片_2025111211331860_3.jpg)
 ### 学习分析
 
 1. 切换到"学习分析"标签页
@@ -405,19 +408,22 @@ export BGE_MODEL_PATH="/path/to/bge/model"
    - 整体掌握度统计
    - 薄弱知识点列表
    - 详细学习档案
-
+![2](education\image\59ced7bb989570f31c327b14d0abf9ff.png)
+![2](education\image\036e6c21995062bdcf82d63a537d9cca.png)
 ### 知识图谱
 
 1. 切换到"知识图谱"标签页
 2. 选择布局算法（spring/circular/kamada_kawai）
 3. 查看题目、知识点和难度之间的关系网络
+![2](education\image\9d9937f6ba0c093f3ed85f806d972cd6.png)
+
 
 ### 系统管理
 
 1. **题库管理**: 导入JSON格式的题目文件
 2. **系统信息**: 查看系统状态和配置信息
 3. **模型管理**: 重新加载模型或清除缓存
-
+![2](education\image\0148140158105.png)
 ## 📁 项目结构
 
 ```
