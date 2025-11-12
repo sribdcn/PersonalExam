@@ -10,9 +10,10 @@ Personalized Question Generation System Based on LLM and Knowledge Graph Collabo
 """
 
 import logging
-from typing import List, Dict, Any, Tuple
+from typing import List, Dict, Any, Tuple, Optional
 from datetime import datetime
 import re
+import hashlib
 from difflib import SequenceMatcher
 
 logger = logging.getLogger(__name__)
@@ -43,19 +44,17 @@ class PersonalizedStudentEvaluator:
         self.pass_score = config.get('pass_score', 0.6)
         self.excellent_score = config.get('excellent_score', 0.85)
         
-        logger.info("✅ 个性化学生评估器初始化完成")
+        # 答案评估缓存（提升性能）
+        self.answer_cache = {}
+        self.cache_enabled = config.get('enable_answer_cache', True)
+        self.cache_max_size = config.get('answer_cache_max_size', 1000)
+        
+        logger.info("✅ 个性化学生评估器初始化完成（带答案缓存）")
     
     def check_answer(self, question: Dict[str, Any],
                     student_answer: str,
                     prompt_template: str) -> Tuple[bool, str]:
-        """检查学生答案是否正确"""
-        prompt = prompt_template.format(
-            question=question.get('问题', ''),
-            correct_answer=question.get('答案', ''),
-            student_answer=student_answer,
-            explanation=question.get('解析', '')
-        )
-        
+        """检查学生答案是否正确（优化版：缓存+快速匹配）"""
         try:
             # 1) 先进行快速严格匹配：完全等价则直接返回，跳过LLM，显著降低延迟
             strict_ok = self._strict_answer_check(question, student_answer)
@@ -63,19 +62,33 @@ class PersonalizedStudentEvaluator:
                 # 返回可解释理由（不调用LLM）
                 return True, self._build_reason_for_strict(question, student_answer, True)
 
-            # 2) 需要LLM参与的再调用模型
+            # 2) 检查缓存（仅当启用缓存时）
+            if self.cache_enabled:
+                cache_key = self._get_cache_key(question, student_answer)
+                if cache_key in self.answer_cache:
+                    logger.debug(f"✅ 答案评估缓存命中")
+                    return self.answer_cache[cache_key]
+
+            # 3) 需要LLM参与的再调用模型（优化参数以提升速度）
             if not self.llm_model.is_loaded:
                 logger.info("🔄 首次使用，正在加载盘古7B模型...")
                 self.llm_model.load_model()
             
-            logger.info("🤖 使用盘古7B模型进行智能答案评估（严格模式）")
-            # 缩短生成长度、关闭采样以提升速度和稳定性
+            logger.info("🤖 使用盘古7B模型进行智能答案评估（快速模式）")
+            # 优化：进一步缩短生成长度、降低温度、关闭采样以提升速度
+            prompt = prompt_template.format(
+                question=question.get('问题', ''),
+                correct_answer=question.get('答案', ''),
+                student_answer=student_answer,
+                explanation=question.get('解析', '')
+            )
+            
             response = self.llm_model.generate(
                 prompt,
-                temperature=0.1,
+                temperature=0.05,  # 进一步降低温度，提升速度和稳定性
                 top_p=0.9,
-                max_length=256,
-                do_sample=False
+                max_length=128,  # 进一步缩短生成长度（只需要判定结果+简短理由）
+                enable_thinking=False  # 关闭思维链，提升速度
             )
             
             is_correct, reason = self._parse_model_response(response)
@@ -85,6 +98,10 @@ class PersonalizedStudentEvaluator:
                 is_correct = self._strict_answer_check(question, student_answer)
                 reason = self._build_reason_for_strict(question, student_answer, bool(is_correct))
             
+            # 4) 缓存结果
+            if self.cache_enabled:
+                self._add_to_cache(cache_key, (is_correct, reason))
+            
             return is_correct, reason
             
         except Exception as e:
@@ -93,6 +110,25 @@ class PersonalizedStudentEvaluator:
             # 使用规则化可解释理由（即使模型调用失败也要有详细理由）
             reason = self._build_reason_for_strict(question, student_answer, bool(is_correct))
             return is_correct, reason
+    
+    def _get_cache_key(self, question: Dict[str, Any], student_answer: str) -> str:
+        """生成缓存键"""
+        # 使用题目ID和答案的哈希值作为缓存键
+        question_id = question.get('题号', '')
+        answer_hash = hashlib.md5(
+            (student_answer.lower().strip() + question.get('答案', '').lower().strip()).encode('utf-8')
+        ).hexdigest()[:8]
+        return f"{question_id}_{answer_hash}"
+    
+    def _add_to_cache(self, cache_key: str, result: Tuple[bool, str]):
+        """添加到缓存"""
+        # 限制缓存大小
+        if len(self.answer_cache) >= self.cache_max_size:
+            # 删除最旧的条目（简单FIFO策略）
+            oldest_key = next(iter(self.answer_cache))
+            del self.answer_cache[oldest_key]
+        
+        self.answer_cache[cache_key] = result
     
     def _parse_model_response(self, response: str) -> Tuple[bool, str]:
         """解析模型响应"""

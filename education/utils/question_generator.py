@@ -156,9 +156,14 @@ ID: [题目ID数字]
                 logger.info("🔄 加载盘古7B模型...")
                 self.llm_model.load_model()
             
-            # 生成（降低温度）
+            # 生成（优化参数以提升速度）
             logger.info("🤖 盘古7B正在选择题目...")
-            response = self.llm_model.generate(prompt, temperature=0.3, max_length=512)
+            response = self.llm_model.generate(
+                prompt, 
+                temperature=0.2,  # 降低温度，提升速度和稳定性
+                max_length=64,  # 大幅缩短生成长度（只需要ID数字）
+                enable_thinking=False  # 关闭思维链，提升速度
+            )
             
             # 解析响应
             selected_id = self._parse_selection_response_simple(response)

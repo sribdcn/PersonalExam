@@ -92,13 +92,16 @@ class SmartEducationUI:
             
             current_kp_text = gr.Markdown("**当前知识点:** 等待加载...")
             
-            # 题目显示 + 题目小雷达图
-            question_text = gr.Textbox(
-                label="📝 题目",
-                lines=6,
-                interactive=False
-            )
-            question_radar_plot = gr.Plot(label="题目画像（难度/掌握度）")
+            # 题目显示 + 题目小雷达图（并排显示）
+            with gr.Row():
+                with gr.Column(scale=2):
+                    question_text = gr.Textbox(
+                        label="📝 题目",
+                        lines=8,
+                        interactive=False
+                    )
+                with gr.Column(scale=1):
+                    question_radar_plot = gr.Plot(label="📊 题目画像", show_label=True)
             
             # 答案输入
             answer_input = gr.Textbox(
@@ -182,21 +185,35 @@ class SmartEducationUI:
             )
             analyze_btn = gr.Button("🔍 分析", variant="primary")
         
-        # 整体概况
+        # 整体概况和雷达图
         with gr.Row():
-            with gr.Column():
+            with gr.Column(scale=1):
                 overall_stats = gr.Markdown("### 📈 整体掌握度\n\n暂无数据")
-            with gr.Column():
                 weak_points_display = gr.Markdown("### ⚠️ 薄弱知识点\n\n暂无数据")
+            with gr.Column(scale=2):
+                gr.Markdown("### 📊 掌握度雷达图")
+                radar_plot = gr.Plot(label="掌握度雷达图")
+                radar_type = gr.Radio(
+                    choices=["知识点大类", "知识点小类"],
+                    value="知识点大类",
+                    label="雷达图类型"
+                )
         
         # 详细档案
         gr.Markdown("### 📋 详细学习档案")
         detailed_profile = gr.Markdown("暂无数据")
         
         analyze_btn.click(
-            fn=self._analyze_student,
-            inputs=[student_id_for_analysis],
-            outputs=[overall_stats, weak_points_display, detailed_profile]
+            fn=self._analyze_student_with_radar,
+            inputs=[student_id_for_analysis, radar_type],
+            outputs=[overall_stats, weak_points_display, detailed_profile, radar_plot]
+        )
+        
+        # 雷达图类型变化时自动刷新
+        radar_type.change(
+            fn=self._update_radar_chart,
+            inputs=[student_id_for_analysis, radar_type],
+            outputs=[radar_plot]
         )
     
     def _create_knowledge_graph_tab(self):
@@ -499,19 +516,30 @@ class SmartEducationUI:
     def _generate_question_radar(self, session):
         """生成题目小雷达图：难度/掌握度/近期准确率"""
         try:
-            major = session['current_major_point']
-            minor = session['current_minor_point']
-            question = session['current_question']
+            if session is None:
+                return None
+                
+            major = session.get('current_major_point', '未知')
+            minor = session.get('current_minor_point', '未知')
+            question = session.get('current_question', {})
+            student_id = session.get('student_id', '')
 
             # 获取BKT状态
-            state = self.system.bkt_algorithm.get_student_state(session['student_id'], major, minor)
+            state = self.system.bkt_algorithm.get_student_state(student_id, major, minor)
             mastery = float(state.mastery_prob)
-            # 近期准确率
+            
+            # 近期准确率（直接从state获取）
             recent_acc = 0.0
-            if hasattr(self.system.bkt_algorithm, '_calculate_recent_accuracy'):
-                recent_acc = self.system.bkt_algorithm._calculate_recent_accuracy(state)
-            # 题目难度（0-1）
+            if state.recent_performance:
+                recent_acc = sum(state.recent_performance) / len(state.recent_performance)
+            
+            # 题目难度（0-1，如果题目中没有难度，使用默认值）
             difficulty = float(question.get('难度', 0.5))
+            
+            # 如果难度是字符串，转换为数值
+            if isinstance(question.get('难度'), str):
+                difficulty_map = {'简单': 0.3, '中等': 0.5, '困难': 0.7}
+                difficulty = difficulty_map.get(question.get('难度', '中等'), 0.5)
 
             categories = ['题目难度', '学生掌握度', '近期准确率']
             values = [difficulty, mastery, recent_acc]
@@ -548,8 +576,8 @@ class SmartEducationUI:
             return fig
         except Exception:
             return None
-    def _analyze_student(self, student_id: str):
-        """分析学生（美化版）"""
+    def _analyze_student_with_radar(self, student_id: str, radar_type: str):
+        """分析学生（包含雷达图）"""
         try:
             profile = self.system.bkt_algorithm.generate_student_profile(student_id)
             
@@ -580,12 +608,47 @@ class SmartEducationUI:
             # 详细档案 Markdown
             detail_md = self._format_profile_markdown(profile)
             
-            return overall_md, weak_md, detail_md
+            # 生成雷达图
+            radar_fig = self._generate_radar_chart(profile, radar_type)
+            
+            return overall_md, weak_md, detail_md, radar_fig
             
         except Exception as e:
             logger.error(f"分析失败: {e}")
+            import traceback
+            logger.error(traceback.format_exc())
             error_md = f"### ❌ 错误\n\n{str(e)}"
-            return error_md, error_md, error_md
+            return error_md, error_md, error_md, None
+    
+    def _update_radar_chart(self, student_id: str, radar_type: str):
+        """更新雷达图"""
+        try:
+            profile = self.system.bkt_algorithm.generate_student_profile(student_id)
+            radar_fig = self._generate_radar_chart(profile, radar_type)
+            return radar_fig
+        except Exception as e:
+            logger.error(f"生成雷达图失败: {e}")
+            return None
+    
+    def _generate_radar_chart(self, profile: Dict[str, Any], radar_type: str):
+        """生成雷达图"""
+        try:
+            from education.visualization.radar_chart import create_radar_chart_generator
+            
+            radar_generator = create_radar_chart_generator()
+            
+            if radar_type == "知识点大类":
+                fig = radar_generator.create_radar_chart(profile)
+            else:  # 知识点小类
+                fig = radar_generator.create_detailed_radar_chart(profile)
+            
+            return fig
+            
+        except Exception as e:
+            logger.error(f"生成雷达图失败: {e}")
+            import traceback
+            logger.error(traceback.format_exc())
+            return None
     
     def _format_profile_markdown(self, profile: Dict[str, Any]) -> str:
         """格式化学生档案为美化的Markdown"""
