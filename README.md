@@ -329,21 +329,21 @@ education/data/question_database_2.json
 docker exec -it docker_person_exam /bin/bash
 cd /app
 
-# 安装依赖（使用国内镜像源，速度更快）
-pip install -r requirements.txt -i https://pypi.tuna.tsinghua.edu.cn/simple
 
-# 如果遇到torch/vllm相关依赖冲突，可以跳过已安装的包:
-# pip install -r requirements.txt --ignore-installed torch torch-npu torchaudio torchvision vllm vllm-ascend transformers -i https://pypi.tuna.tsinghua.edu.cn/simple
+# 安装依赖（使用国内镜像源，速度更快）
+# 由于torch torch-npu torchaudio torchvision vllm vllm-ascend这几个包已经在docker中存在，安装是可能造成版本冲突，故不在requirements.txt中申明
+pip install -r requirements.txt -i https://pypi.tuna.tsinghua.edu.cn/simple
 
 # 在容器内启动系统
 cd /app/education
 
 # 设置环境变量（根据实际路径调整）
 export PANGU_MODEL_PATH=/opt/pangu/openPangu-Embedded-7B-V1.1
-export BGE_MODEL_PATH=/home/liqinsi/bge-small-zh-v1.5
 
 python main.py
 ```
+
+> 服务将会运行在: http://localhost:7860（默认端口）。如果要修改端口，请在 `education/config.py` 中修改 `UI_CONFIG['port']` 的值，或通过环境变量 `GRADIO_SERVER_PORT` 设置。
 
 ## ⚙️ 配置说明
 
