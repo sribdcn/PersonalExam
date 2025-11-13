@@ -218,8 +218,8 @@ LOGGING_CONFIG = {
 
 # ==================== 系统信息 ====================
 SYSTEM_INFO = {
-    "version": "3.1.0",
-    "author": "AI系统及应用课题组@SRIBD",
+    "version": "1.0.1",
+    "author": "AI系统与应用课题组@SRIBD",
     "description": "基于LLM和知识图谱协同的个性化出题系统（基于向量检索和知识图谱）",
     "model": "openPanGu-Embedded-7B-V1.1",
     "device": "Ascend 910B NPU",

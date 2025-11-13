@@ -415,29 +415,36 @@ PersonalExam/
 │   ├── main.py                  # 程序入口
 │   ├── config.py                # 配置文件
 │   ├── system_core.py           # 系统核心
+│   ├── clean.py                 # 清理脚本
+│   ├── test.py                  # 测试脚本
 │   ├── data/                    # 数据目录
-│   │   ├── question_database_2.json  # 题库
-│   │   └── student_states.json  # 学生状态
+│   │   ├── question_database.json      # 题库（旧版）
+│   │   ├── question_database_2.json    # 题库（当前版本）
+│   │   └── student_states.json          # 学生状态
 │   ├── models/                  # 模型模块
 │   │   ├── llm_models.py        # 语言模型
-│   │   └── embedding_model.py  # 嵌入模型
+│   │   └── embedding_model.py   # 嵌入模型
 │   ├── data_management/         # 数据管理
-│   │   └── question_db.py      # 题库数据库
-│   ├── knowledge_management/    # 知识管理
-│   │   └── rag_engine.py       # RAG引擎
+│   │   └── question_db.py       # 题库数据库
+│   ├── knowledge_management/     # 知识管理
+│   │   └── rag_engine.py        # RAG引擎
 │   ├── utils/                   # 工具模块
-│   │   ├── bkt_algorithm.py    # BKT算法
-│   │   ├── evaluator.py        # 评估器
+│   │   ├── bkt_algorithm.py     # BKT算法
+│   │   ├── evaluator.py         # 评估器
 │   │   └── question_generator.py # 题目生成器
 │   ├── visualization/           # 可视化
-│   │   └── kg_visualizer.py    # 知识图谱可视化
-│   └── ui/                      # UI界面
-│       └── main_ui.py           # Gradio界面
-├── requirements.txt             # Python依赖
-├── NOTICE                      # 开源软件声明
-├── OPEN_SOURCE_LICENSES.md     # 许可证文档
-├── LICENSE                     # BSL协议文档
-└── README.md                   # 本文件
+│   │   ├── kg_visualizer.py     # 知识图谱可视化
+│   │   └── radar_chart.py        # 雷达图可视化
+│   ├── ui/                       # UI界面
+│   │   └── main_ui.py            # Gradio界面
+│   ├── image/                    # 图片资源
+│   │   └── *.png, *.jpg         # 文档和UI使用的图片
+│   └── logs/                     # 日志目录
+│       └── system.log            # 系统日志
+├── requirements.txt              # Python依赖
+├── LICENSE                       # 项目许可证
+├── NOTICE                        # 开源软件声明
+└── README.md                     # 本文件
 ```
 
 ## 📄 开源许可证
@@ -494,7 +501,7 @@ BSL 1.1 是一种源代码可见的许可证，允许：
 
 完整的开源软件清单和许可证信息请参考：
 
-- 📋 [OPEN_SOURCE_LICENSES.md](OPEN_SOURCE_LICENSES.md) - 完整的依赖清单和许可证信息
+- 📋 [LICENSE](LICENSE) - 项目代码的许可证
 - 📄 [NOTICE](NOTICE) - 开源软件声明文件
 - 📦 [requirements.txt](requirements.txt) - Python 依赖清单
 
@@ -531,7 +538,7 @@ BSL 1.1 是一种源代码可见的许可证，允许：
 
 详细信息请参考：
 - 项目许可证: [LICENSE](LICENSE)
-- 完整许可证文档: [OPEN_SOURCE_LICENSES.md](OPEN_SOURCE_LICENSES.md)
+- 开源软件声明: [NOTICE](NOTICE)
 - 各项目的官方文档
 
 ### 致谢
@@ -677,7 +684,7 @@ A: 远程SSH部署步骤：
 
 ## 📝 更新日志
 
-### Version 1.0.0 (当前版本)
+### Version 1.0.1 (当前版本)
 
 - ✨ 新增细粒度知识点追踪（支持知识点小类）
 - ✨ 新增RAG引擎驱动的智能题目推荐
