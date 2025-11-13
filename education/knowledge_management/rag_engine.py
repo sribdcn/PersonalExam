@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Copyright (c) 2025 AI系统及应用课题组@SRIBD
+Copyright (c) 2025 AI系统与应用课题组@SRIBD
 
 Personalized Question Generation System Based on LLM and Knowledge Graph Collaboration
 

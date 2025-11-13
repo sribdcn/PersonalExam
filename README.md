@@ -2,18 +2,18 @@
 
 **Personalized Question Generation System Based on LLM and Knowledge Graph Collaboration**
 
-[![Version](https://img.shields.io/badge/version-3.1.0-blue.svg)](https://git.bookug.cc/star-aisl/PersonalExam)
+[![Version](https://img.shields.io/badge/version-3.1.0-blue.svg)](GitHub link)
 [![Python](https://img.shields.io/badge/python-3.11.12-green.svg)](https://www.python.org/)
-[![License](https://img.shields.io/badge/license-BUSL%201.1-orange.svg)](LICENSE)
+[![License](https://img.shields.io/badge/license-BSL%201.1-orange.svg)](LICENSE)
 
 一个基于LLM和知识图谱协同的个性化出题系统，使用BKT算法、RAG引擎和OpenPangu模型，实现个性化的智能题目生成和推荐。
 
-**开发单位**: 深圳大数据研究院 (SRIBD) | **课题组**: AI系统及应用课题组
+**开发单位**: 深圳市大数据研究院 (SRIBD) | **课题组**: AI系统与应用课题组
 
 **Powered by OpenPangu**
 
 **许可证**: 
-- **项目代码**: 本项目代码采用 **BUSL 1.1 (Business Source License 1.1)** 许可证，允许非商业使用，商业使用需要授权。
+- **项目代码**: 本项目代码采用 **BSL 1.1 (Business Source License 1.1)** 许可证，允许非商业使用，商业使用需要授权。
 - **OpenPangu模型**: 本项目使用的OpenPangu模型采用 OPENPANGU MODEL LICENSE AGREEMENT VERSION 1.0 许可证，需遵守该许可协议的所有条款。
 
 ## 📋 目录
@@ -64,87 +64,6 @@
 ### 核心技术栈
 
 ![技术栈](education/image/技术栈.png)
-
-架构图
-```mermaid
-graph TB
-    subgraph 前端层["前端层"]
-        GradioUI["Gradio Web UI<br/>交互式Web界面"]
-    end
-    
-    subgraph 应用层["应用层"]
-        SystemCore["System Core<br/>系统核心"]
-        BKT["BKT算法<br/>知识追踪"]
-        RAG["RAG引擎<br/>向量检索+实体提取"]
-        Selector["题目选择器<br/>智能推荐+题目互选"]
-        Evaluator["评估器<br/>答案评判+分析总结"]
-        Visualizer["可视化器<br/>知识图谱构建"]
-    end
-    
-    subgraph AI模型层["AI模型层"]
-        Pangu["OpenPangu 7B<br/>语言模型<br/>• 实体关系提取<br/>• 题目互选<br/>• 答案评判<br/>• 分析总结"]
-        BGE["BGE-small-zh-v1.5<br/>嵌入模型"]
-    end
-    
-    subgraph 数据层["数据层"]
-        QuestionDB[("题库数据库<br/>(JSON)")]
-        StudentState[("学生状态<br/>(JSON)")]
-        VectorIndex[("向量索引<br/>(内存)")]
-        KnowledgeGraph[("知识图谱<br/>(内存)")]
-    end
-    
-    subgraph 硬件层["硬件层"]
-        NPU["昇腾910B2 NPU"]
-    end
-    
-    %% 前端到核心
-    GradioUI --> SystemCore
-    
-    %% 系统核心初始化各组件
-    SystemCore --> BKT
-    SystemCore --> RAG
-    SystemCore --> Selector
-    SystemCore --> Evaluator
-    SystemCore --> Visualizer
-    
-    %% 数据存储关系
-    BKT --> StudentState
-    Visualizer --> KnowledgeGraph
-    
-    %% RAG引擎相关连接
-    RAG --> QuestionDB
-    RAG --> BGE
-    RAG --> Pangu
-    BGE --> VectorIndex
-    RAG --> VectorIndex
-    RAG --> KnowledgeGraph
-    
-    %% 题目选择器相关连接
-    Selector --> RAG
-    Selector --> BKT
-    Selector --> Pangu
-    Selector --> QuestionDB
-    
-    %% 评估器相关连接
-    Evaluator --> Pangu
-    Evaluator --> BKT
-    
-    %% 可视化器相关连接
-    Visualizer --> QuestionDB
-    
-    %% 硬件加速
-    Pangu --> NPU
-    
-    style GradioUI fill:#E3F2FD
-    style SystemCore fill:#F3E5F5
-    style Pangu fill:#FFF3E0
-    style BGE fill:#FFF3E0
-    style NPU fill:#E0E0E0
-    style RAG fill:#E1BEE7
-    style Selector fill:#E1BEE7
-    style Evaluator fill:#E1BEE7
-    style Visualizer fill:#E1BEE7
-```
 
 ### 主要技术栈
 
@@ -345,6 +264,7 @@ hf download FreedomIntelligence/openPangu-Embedded-7B-V1.1 --local-dir /opt/pang
 ls -lh /opt/pangu/openPangu-Embedded-7B-V1.1/
 
 # 应该包含模型权重文件（如 .bin, .safetensors 等）和配置文件（config.json, tokenizer.json 等）
+# 可进一步参考盘古的说明，检查checksum，确保文件没有损坏
 ```
 
 **注意事项**：
@@ -408,6 +328,7 @@ python main.py
 
 ![图片](./education/image/3a017ea219588d140d900805130dd2cd.png)
 > 服务将会运行在: http://localhost:7860（默认端口）。如果要修改端口，请在 `education/config.py` 中修改 `UI_CONFIG['port']` 的值，或通过环境变量 `GRADIO_SERVER_PORT` 设置。
+> 此外，请确保机器已经开放相应端口，如果是云服务器还需要在安全组中设置。
 
 ## ⚙️ 配置说明
 
@@ -515,7 +436,7 @@ PersonalExam/
 ├── requirements.txt             # Python依赖
 ├── NOTICE                      # 开源软件声明
 ├── OPEN_SOURCE_LICENSES.md     # 许可证文档
-├── COMPLIANCE_CHECKLIST.md     # 合规检查清单
+├── LICENSE                     # BSL协议文档
 └── README.md                   # 本文件
 ```
 
@@ -523,9 +444,9 @@ PersonalExam/
 
 ### 项目代码许可证
 
-**本项目代码采用 BUSL 1.1 (Business Source License 1.1) 许可证**
+**本项目代码采用 BSL 1.1 (Business Source License 1.1) 许可证**
 
-BUSL 1.1 是一种源代码可见的许可证，允许：
+BSL 1.1 是一种源代码可见的许可证，允许：
 - ✅ **非商业使用**: 个人、教育、研究用途完全免费
 - ✅ **查看源代码**: 可以查看、复制、修改源代码
 - ✅ **分发**: 可以分发源代码（需保留版权声明）
@@ -596,7 +517,7 @@ BUSL 1.1 是一种源代码可见的许可证，允许：
 
 **重要**: 使用本项目时，必须遵守以下许可证要求：
 
-1. **项目代码许可证 (BUSL 1.1)**: 
+1. **项目代码许可证 (BSL 1.1)**: 
    - 非商业使用：允许个人、教育、研究用途
    - 商业使用：需要获得授权许可
 
@@ -622,7 +543,7 @@ BUSL 1.1 是一种源代码可见的许可证，允许：
 
 ### 引用和致谢
 
-**重要声明**：如果您的研究、工作或项目中使用了本项目，请引用并致谢 **深圳大数据研究院 (SRIBD)** 和 **AI系统及应用课题组**。
+**重要声明**：如果您的研究、工作或项目中使用了本项目，请引用并致谢 **深圳市大数据研究院 (SRIBD)** 和 **AI系统与应用课题组**。
 
 #### 引用格式
 
@@ -631,26 +552,34 @@ BUSL 1.1 是一种源代码可见的许可证，允许：
 **中文引用格式**：
 ```
 基于LLM和知识图谱协同的个性化出题系统. 
-AI系统及应用课题组, 深圳大数据研究院 (SRIBD), 2025.
-https://git.bookug.cc/star-aisl/PersonalExam
+AI系统与应用课题组, 深圳市大数据研究院 (SRIBD), 2025.
+GitHub link
 ```
 
 **英文引用格式**：
 ```
 Personalized Question Generation System Based on LLM and Knowledge Graph Collaboration.
 AI System and Application Research Group, Shenzhen Research Institute of Big Data (SRIBD), 2025.
-https://git.bookug.cc/star-aisl/PersonalExam
+GitHub link
 ```
 
 **BibTeX格式**：
 ```bibtex
 @software{personalexam2025,
   title = {基于LLM和知识图谱协同的个性化出题系统},
-  author = {AI系统及应用课题组},
-  organization = {深圳大数据研究院 (SRIBD)},
+  author = {AI系统与应用课题组},
+  organization = {深圳市大数据研究院 (SRIBD)},
   year = {2025},
-  url = {https://git.bookug.cc/star-aisl/PersonalExam},
-  note = {Personalized Question Generation System Based on LLM and Knowledge Graph Collaboration}
+  url = {GitHub link}
+}
+```
+```bibtex
+@software{personalexam2025,
+  title = {Personalized Question Generation System Based on LLM and Knowledge Graph Collaboration},
+  author = {AI System and Application Research Group},
+  organization = {Shenzhen Research Institute of Big Data (SRIBD)},
+  year = {2025},
+  url = {GitHub link}
 }
 ```
 
@@ -661,7 +590,7 @@ https://git.bookug.cc/star-aisl/PersonalExam
 **中文致谢**：
 ```
 本研究/工作使用了"基于LLM和知识图谱协同的个性化出题系统"。
-感谢深圳大数据研究院 (SRIBD) 和 AI系统及应用课题组提供该项目。
+感谢深圳市大数据研究院 (SRIBD) 和 AI系统与应用课题组提供该项目。
 ```
 
 **英文致谢**：
@@ -690,7 +619,7 @@ We thank the Shenzhen Research Institute of Big Data (SRIBD) and the AI System a
 
 ### 报告问题
 
-如果发现问题，请在 [Issues](https://git.bookug.cc/star-aisl/PersonalExam/issues) 中报告，包括：
+如果发现问题，请在 [Issues](GitHub link /issues) 中报告，包括：
 - 问题描述
 - 复现步骤
 - 预期行为
@@ -767,16 +696,16 @@ A: 远程SSH部署步骤：
 
 ## 免责声明
 
-由于 openPangu-Embedded-7B（“模型”）所依赖的技术固有的技术限制，以及人工智能生成的内容是由盘古自动生成的，我们无法对以下事项做出任何保证：
-- 尽管该模型的输出由 AI 算法生成，但不能排除某些信息可能存在缺陷、不合理或引起不适的可能性，生成的内容不代表我们的态度或立场；
-- 无法保证该模型 100% 准确、可靠、功能齐全、及时、安全、无错误、不间断、持续稳定或无任何故障；
-- 该模型的输出内容不构成任何建议或决策，也不保证生成的内容的真实性、完整性、准确性、及时性、合法性、功能性或实用性。生成的内容不能替代医疗、法律等领域的专业人士回答您的问题。生成的内容仅供参考，不代表我们的任何态度、立场或观点。您需要根据实际情况做出独立判断，我们不承担任何责任。
+由于 openPangu-Embedded-7B等AI模型固有的技术限制，以及本系统生成的内容是由盘古等模型自动生成的，我们无法对以下事项做出任何保证：
+- 尽管本系统的输出由 AI 算法生成，但不能排除某些信息可能存在缺陷、不合理或引起不适的可能性，生成的内容不代表我们的态度或立场；
+- 无法保证该系统 100% 准确、可靠、功能齐全、及时、安全、无错误、不间断、持续稳定或无任何故障；
+- 该系统的输出内容不构成任何建议或决策，也不保证生成的内容的真实性、完整性、准确性、及时性、合法性、功能性或实用性。生成的内容不能替代教育、医疗等领域的专业人士回答您的问题。生成的内容仅供参考，不代表我们的任何态度、立场或观点。您需要根据实际情况做出独立判断，我们不承担任何责任。
 
 ## 反馈
 
 如果有任何意见和建议，请提交issue或联系 aisa@sribd.cn。
 
-**Made with ❤️ by [AI系统及应用课题组@SRIBD](aisa@sribd.cn)**
+**Made with ❤️ by [AI系统与应用课题组@SRIBD](aisa@sribd.cn)**
 
 *最后更新: 2025年*
 
