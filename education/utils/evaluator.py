@@ -10,9 +10,10 @@ Personalized Question Generation System Based on LLM and Knowledge Graph Collabo
 """
 
 import logging
-from typing import List, Dict, Any, Tuple
+from typing import List, Dict, Any, Tuple, Optional
 from datetime import datetime
 import re
+import hashlib
 from difflib import SequenceMatcher
 
 logger = logging.getLogger(__name__)
@@ -43,19 +44,18 @@ class PersonalizedStudentEvaluator:
         self.pass_score = config.get('pass_score', 0.6)
         self.excellent_score = config.get('excellent_score', 0.85)
         
-        logger.info("✅ 个性化学生评估器初始化完成")
+        # 答案评估缓存（提升性能）
+        self.answer_cache = {}
+        self.cache_enabled = config.get('enable_answer_cache', True)
+        self.cache_max_size = config.get('answer_cache_max_size', 1000)
+        self.use_llm_evaluation = config.get('use_llm_evaluation', True)
+        
+        logger.info("✅ 个性化学生评估器初始化完成（带答案缓存）")
     
     def check_answer(self, question: Dict[str, Any],
                     student_answer: str,
                     prompt_template: str) -> Tuple[bool, str]:
-        """检查学生答案是否正确"""
-        prompt = prompt_template.format(
-            question=question.get('问题', ''),
-            correct_answer=question.get('答案', ''),
-            student_answer=student_answer,
-            explanation=question.get('解析', '')
-        )
-        
+        """检查学生答案是否正确（优化版：缓存+快速匹配）"""
         try:
             # 1) 先进行快速严格匹配：完全等价则直接返回，跳过LLM，显著降低延迟
             strict_ok = self._strict_answer_check(question, student_answer)
@@ -63,19 +63,42 @@ class PersonalizedStudentEvaluator:
                 # 返回可解释理由（不调用LLM）
                 return True, self._build_reason_for_strict(question, student_answer, True)
 
-            # 2) 需要LLM参与的再调用模型
+            cache_key: Optional[str] = None
+
+            # 2) 检查缓存（仅当启用缓存时）
+            if self.cache_enabled:
+                cache_key = self._get_cache_key(question, student_answer)
+                if cache_key in self.answer_cache:
+                    logger.debug(f"✅ 答案评估缓存命中")
+                    return self.answer_cache[cache_key]
+
+            # 如果关闭LLM评估，直接返回严格判定结果
+            if not self.use_llm_evaluation:
+                result = (False, self._build_reason_for_strict(question, student_answer, False))
+                if self.cache_enabled and cache_key:
+                    self._add_to_cache(cache_key, result)
+                return result
+
+            # 3) 需要LLM参与的再调用模型（优化参数以提升速度）
             if not self.llm_model.is_loaded:
                 logger.info("🔄 首次使用，正在加载盘古7B模型...")
                 self.llm_model.load_model()
             
-            logger.info("🤖 使用盘古7B模型进行智能答案评估（严格模式）")
-            # 缩短生成长度、关闭采样以提升速度和稳定性
+            logger.info("🤖 使用盘古7B模型进行智能答案评估（快速模式）")
+            # 优化：进一步缩短生成长度、降低温度、关闭采样以提升速度
+            prompt = prompt_template.format(
+                question=question.get('问题', ''),
+                correct_answer=question.get('答案', ''),
+                student_answer=student_answer,
+                explanation=question.get('解析', '')
+            )
+            
             response = self.llm_model.generate(
                 prompt,
-                temperature=0.1,
+                temperature=0.05,  # 进一步降低温度，提升速度和稳定性
                 top_p=0.9,
-                max_length=256,
-                do_sample=False
+                max_length=128,  # 进一步缩短生成长度（只需要判定结果+简短理由）
+                enable_thinking=False  # 关闭思维链，提升速度
             )
             
             is_correct, reason = self._parse_model_response(response)
@@ -85,6 +108,10 @@ class PersonalizedStudentEvaluator:
                 is_correct = self._strict_answer_check(question, student_answer)
                 reason = self._build_reason_for_strict(question, student_answer, bool(is_correct))
             
+            # 4) 缓存结果
+            if self.cache_enabled and cache_key:
+                self._add_to_cache(cache_key, (is_correct, reason))
+            
             return is_correct, reason
             
         except Exception as e:
@@ -93,6 +120,25 @@ class PersonalizedStudentEvaluator:
             # 使用规则化可解释理由（即使模型调用失败也要有详细理由）
             reason = self._build_reason_for_strict(question, student_answer, bool(is_correct))
             return is_correct, reason
+    
+    def _get_cache_key(self, question: Dict[str, Any], student_answer: str) -> str:
+        """生成缓存键"""
+        # 使用题目ID和答案的哈希值作为缓存键
+        question_id = question.get('题号', '')
+        answer_hash = hashlib.md5(
+            (student_answer.lower().strip() + question.get('答案', '').lower().strip()).encode('utf-8')
+        ).hexdigest()[:8]
+        return f"{question_id}_{answer_hash}"
+    
+    def _add_to_cache(self, cache_key: str, result: Tuple[bool, str]):
+        """添加到缓存"""
+        # 限制缓存大小
+        if len(self.answer_cache) >= self.cache_max_size:
+            # 删除最旧的条目（简单FIFO策略）
+            oldest_key = next(iter(self.answer_cache))
+            del self.answer_cache[oldest_key]
+        
+        self.answer_cache[cache_key] = result
     
     def _parse_model_response(self, response: str) -> Tuple[bool, str]:
         """解析模型响应"""
@@ -133,39 +179,101 @@ class PersonalizedStudentEvaluator:
             return None, response
     
     def _strict_answer_check(self, question: Dict[str, Any], student_answer: str) -> bool:
-        """备用严格答案检查逻辑"""
-        correct_answer = question.get('答案', '').lower().strip()
-        student_answer_lower = student_answer.lower().strip()
-        
+        """备用严格答案检查逻辑（增强版，支持集合/顺序无关/间隔等价）"""
+        correct_answer = (question.get('答案') or '').lower().strip()
+        student_answer_lower = (student_answer or '').lower().strip()
+
         if not correct_answer or not student_answer_lower:
             return False
-        
+
+        # 1) 直接规范化字符串等价（去标点空白）
         correct_clean = re.sub(r'[\s\.,;!?，。；！？、]', '', correct_answer)
         student_clean = re.sub(r'[\s\.,;!?，。；！？、]', '', student_answer_lower)
-        
         if correct_clean == student_clean:
             return True
-        
+
+        # 2) 解集/多解场景：按常见分隔符拆分并做集合比较（忽略顺序）
+        def split_solutions(text: str):
+            # 去掉变量名与等号，如 x=2 -> 2
+            text = re.sub(r'[a-zA-Z]\s*=', '', text)
+            parts = re.split(r'\s*(?:或|and|,|，|；|;|、|/|\bor\b|\||\s+或是\s+)\s*', text)
+            parts = [p for p in parts if p]
+            return parts
+
+        corr_parts = split_solutions(correct_answer)
+        stu_parts = split_solutions(student_answer_lower)
+
+        # 如果标准答案明显包含多个部分（如“2 或 3”），进行集合等价判断
+        if len(corr_parts) >= 2:
+            # 优先用数值集合比较；若取不到数值，再用规范化文本集合比较
+            corr_nums = self._extract_numbers(' '.join(corr_parts))
+            stu_nums = self._extract_numbers(' '.join(stu_parts))
+            if corr_nums:
+                def to_float_list(nums):
+                    vals = []
+                    for n in nums:
+                        try:
+                            vals.append(float(n))
+                        except Exception:
+                            pass
+                    return vals
+
+                c_vals = to_float_list(corr_nums)
+                s_vals = to_float_list(stu_nums)
+                if c_vals and s_vals:
+                    # 逐一匹配（容差）
+                    unmatched = []
+                    for c in c_vals:
+                        if not any(abs(c - s) < 1e-2 for s in s_vals):
+                            unmatched.append(c)
+                    if not unmatched and len(s_vals) >= len(c_vals):
+                        return True
+            # 文本集合比较（去空白/标点）
+            norm = lambda t: re.sub(r'[\s\.,;!?，。；！？、]', '', t)
+            c_set = {norm(p) for p in corr_parts}
+            s_set = {norm(p) for p in stu_parts}
+            if c_set.issubset(s_set):
+                return True
+
+        # 3) 关键要点覆盖与区间处理
         key_info = self._extract_key_information(correct_answer)
         missing_info = []
         for info in key_info:
             if not self._contains_info(student_answer_lower, info):
                 missing_info.append(info)
-        
         if missing_info:
             return False
-        
+
+        # 4) 数值一致性（容差比较）
         correct_numbers = self._extract_numbers(correct_answer)
         student_numbers = self._extract_numbers(student_answer_lower)
         
         if correct_numbers:
-            for num in correct_numbers:
-                if not any(abs(float(num) - float(snum)) < 0.01 for snum in student_numbers):
+            corr_vals = [float(num) for num in correct_numbers]
+            stud_vals = [float(num) for num in student_numbers]
+            matched_indices = set()
+            for s_val in stud_vals:
+                match_index = None
+                for idx, c_val in enumerate(corr_vals):
+                    if abs(c_val - s_val) < 0.01:
+                        match_index = idx
+                        break
+                if match_index is None:
+                    # 学生的数字在标准答案中不存在
                     return False
-        
+                matched_indices.add(match_index)
+            # 情况1：全部数字都匹配
+            numbers_ok = len(matched_indices) == len(corr_vals)
+            # 情况2：只写出最终答案（匹配标准答案的最后一个数字）
+            if not numbers_ok:
+                if stud_vals and abs(stud_vals[-1] - corr_vals[-1]) < 0.01:
+                    numbers_ok = True
+            if not numbers_ok:
+                return False
+ 
         if len(student_clean) < len(correct_clean) * 0.5:
             return False
-        
+
         return True
     
     def _extract_key_information(self, text: str) -> List[str]:
@@ -178,7 +286,7 @@ class PersonalizedStudentEvaluator:
             if keyword in text:
                 key_info.append(keyword)
         
-        interval_patterns = [r'\([^)]+\)', r'\[[^\]]+\]', r'\([^)]+\]', r'\[[^\]]+\)']
+        interval_patterns = [r'\([^)]+\)', r'\[[^\]]+\]', r'\([^)]+\)', r'\[[^\]]+\)']
         for pattern in interval_patterns:
             intervals = re.findall(pattern, text)
             key_info.extend(intervals)
@@ -193,11 +301,20 @@ class PersonalizedStudentEvaluator:
     
     def _extract_numbers(self, text: str) -> List[str]:
         """提取数字"""
-        return re.findall(r'-?\d+\.?\d*', text)
+        if not text:
+            return []
+        normalized = text
+        for minus in ['−', '﹣', '–', '—', '―']:
+            normalized = normalized.replace(minus, '-')
+        normalized = normalized.replace(' ', '')
+        return re.findall(r'-?\d+\.?\d*', normalized)
 
     # ==================== 规则化可解释理由（用于快速判定/回退） ====================
     def _normalize_text(self, text: str) -> str:
-        return re.sub(r'[\s\.,;!?，。；！？、]', '', (text or '').lower().strip())
+        normalized = (text or '').lower().strip()
+        for minus in ['−', '﹣', '–', '—', '―']:
+            normalized = normalized.replace(minus, '-')
+        return re.sub(r'[\s\.,;!?，。；！？、]', '', normalized)
 
     def _numbers_diff(self, std_text: str, stu_text: str, tol: float = 1e-2):
         std_nums = self._extract_numbers(std_text)

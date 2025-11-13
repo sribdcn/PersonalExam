@@ -128,6 +128,11 @@ SMART_QUESTION_CONFIG = {
     
     # RAG检索参数
     "rag_top_k": 5,               # RAG检索返回的题目数量
+    
+    # 题目选择优化
+    "use_llm_selector": False,     # 是否使用LLM进行题目选择（默认关闭以提升速度）
+    "use_rag_selector": False,     # 是否使用RAG向量检索（默认关闭以提升速度）
+    "question_radar_default": 0.5, # 雷达图默认难度/掌握度（无数据时）
 }
 
 # ==================== 评估配置 ====================
@@ -135,6 +140,9 @@ EVALUATION_CONFIG = {
     "pass_score": 0.6,
     "excellent_score": 0.85,
     "enable_thinking": False,
+    "enable_answer_cache": True,  # 启用答案评估缓存
+    "answer_cache_max_size": 1000,  # 缓存最大条目数
+    "use_llm_evaluation": False,   # 默认关闭LLM评估，加速判题
 }
 
 # ==================== 可视化配置 ====================

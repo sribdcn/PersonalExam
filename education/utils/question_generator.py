@@ -20,7 +20,7 @@ logger = logging.getLogger(__name__)
 class SmartQuestionSelector:
     """智能题目选择器"""
     
-    def __init__(self, rag_engine, llm_model, question_db):
+    def __init__(self, rag_engine, llm_model, question_db, config: Optional[Dict[str, Any]] = None):
         """
         初始化选择器
         
@@ -32,6 +32,9 @@ class SmartQuestionSelector:
         self.rag_engine = rag_engine
         self.llm_model = llm_model
         self.question_db = question_db
+        self.config = config or {}
+        self.use_llm_selector = self.config.get("use_llm_selector", False)
+        self.use_rag_selector = self.config.get("use_rag_selector", True)
         
         logger.info("✅ 智能题目选择器初始化完成")
     
@@ -58,6 +61,13 @@ class SmartQuestionSelector:
         """
         logger.info(f"🎯 为学生 {student_id} 选择题目: {major_point}/{minor_point}, "
                    f"掌握度 {student_mastery:.3f}")
+        
+        # 如果关闭RAG，直接使用多级备用方案（最快）
+        if not self.use_rag_selector:
+            logger.info("⚡ 使用快速模式：跳过RAG检索")
+            return self._multi_level_fallback_selection(
+                major_point, minor_point, student_mastery, used_question_ids
+            )
         
         # 1. 构建知识子图
         subgraph = self.rag_engine.build_knowledge_subgraph(
@@ -124,7 +134,13 @@ class SmartQuestionSelector:
             logger.info("✅ 只有1道候选题，直接选择")
             return candidate_questions[0]['question']
         
-        # 构建简洁的候选题目列表
+        # 当禁用LLM选择或候选题较少时，优先使用启发式规则
+        if not self.use_llm_selector:
+            selected = self._heuristic_selection(candidate_questions, student_mastery)
+            if selected:
+                return selected
+        
+        # 构建简洁的候选题目列表（用于LLM）
         candidates_text = ""
         for i, item in enumerate(candidate_questions, 1):
             q = item['question']
@@ -156,9 +172,14 @@ ID: [题目ID数字]
                 logger.info("🔄 加载盘古7B模型...")
                 self.llm_model.load_model()
             
-            # 生成（降低温度）
+            # 生成（优化参数以提升速度）
             logger.info("🤖 盘古7B正在选择题目...")
-            response = self.llm_model.generate(prompt, temperature=0.3, max_length=512)
+            response = self.llm_model.generate(
+                prompt, 
+                temperature=0.2,  # 降低温度，提升速度和稳定性
+                max_length=64,  # 大幅缩短生成长度（只需要ID数字）
+                enable_thinking=False  # 关闭思维链，提升速度
+            )
             
             # 解析响应
             selected_id = self._parse_selection_response_simple(response)
@@ -360,9 +381,9 @@ ID: [题目ID数字]
             return None
 
 
-def create_question_selector(rag_engine, llm_model, question_db) -> SmartQuestionSelector:
+def create_question_selector(rag_engine, llm_model, question_db, config: Optional[Dict[str, Any]] = None) -> SmartQuestionSelector:
     """创建题目选择器"""
-    return SmartQuestionSelector(rag_engine, llm_model, question_db)
+    return SmartQuestionSelector(rag_engine, llm_model, question_db, config)
 
 
 if __name__ == "__main__":

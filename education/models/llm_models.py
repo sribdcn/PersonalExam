@@ -279,14 +279,16 @@ class PanGuModel:
                 import torch_npu
                 model_inputs = {k: v.to(self.devices[0]) for k, v in model_inputs.items()}
             
-            # 生成
+            # 生成（优化：低温度时关闭采样以提升速度）
             with torch.no_grad():
+                # 当temperature很低时，使用贪心解码（更快）
+                do_sample = temperature > 0.1
                 outputs = self.model.generate(
                     **model_inputs,
-                    max_new_tokens=max_new_tokens,
-                    temperature=temperature,
-                    top_p=top_p,
-                    do_sample=True,
+                    max_new_tokens=min(max_new_tokens, 512),  # 限制最大长度以提升速度
+                    temperature=temperature if do_sample else None,
+                    top_p=top_p if do_sample else None,
+                    do_sample=do_sample,
                     eos_token_id=self.eos_token_id,
                     pad_token_id=self.tokenizer.eos_token_id,
                     return_dict_in_generate=True
