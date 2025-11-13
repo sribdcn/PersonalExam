@@ -10,7 +10,7 @@
 
 **开发单位**: 深圳大数据研究院 (SRIBD) | **课题组**: AI系统及应用课题组
 
-**Powered by OpenPangu** - OpenPangu是华为技术有限公司的商标。
+**Powered by OpenPangu**
 
 **许可证**: 
 - **项目代码**: 本项目代码采用 **BUSL 1.1 (Business Source License 1.1)** 许可证，允许非商业使用，商业使用需要授权。
@@ -63,6 +63,9 @@
 
 ### 核心技术栈
 
+![技术栈](education/image/技术栈.png)
+
+架构图
 ```mermaid
 graph TB
     subgraph 前端层["前端层"]
@@ -72,13 +75,14 @@ graph TB
     subgraph 应用层["应用层"]
         SystemCore["System Core<br/>系统核心"]
         BKT["BKT算法<br/>知识追踪"]
-        RAG["RAG引擎<br/>向量检索"]
-        Selector["题目选择器<br/>智能推荐"]
-        Evaluator["评估器<br/>答案评估"]
+        RAG["RAG引擎<br/>向量检索+实体提取"]
+        Selector["题目选择器<br/>智能推荐+题目互选"]
+        Evaluator["评估器<br/>答案评判+分析总结"]
+        Visualizer["可视化器<br/>知识图谱构建"]
     end
     
     subgraph AI模型层["AI模型层"]
-        Pangu["OpenPangu 7B<br/>语言模型"]
+        Pangu["OpenPangu 7B<br/>语言模型<br/>• 实体关系提取<br/>• 题目互选<br/>• 答案评判<br/>• 分析总结"]
         BGE["BGE-small-zh-v1.5<br/>嵌入模型"]
     end
     
@@ -86,37 +90,60 @@ graph TB
         QuestionDB[("题库数据库<br/>(JSON)")]
         StudentState[("学生状态<br/>(JSON)")]
         VectorIndex[("向量索引<br/>(内存)")]
+        KnowledgeGraph[("知识图谱<br/>(内存)")]
     end
     
     subgraph 硬件层["硬件层"]
         NPU["昇腾910B2 NPU"]
     end
     
+    %% 前端到核心
     GradioUI --> SystemCore
+    
+    %% 系统核心初始化各组件
     SystemCore --> BKT
     SystemCore --> RAG
     SystemCore --> Selector
     SystemCore --> Evaluator
+    SystemCore --> Visualizer
     
+    %% 数据存储关系
     BKT --> StudentState
+    Visualizer --> KnowledgeGraph
+    
+    %% RAG引擎相关连接
+    RAG --> QuestionDB
     RAG --> BGE
-    RAG --> VectorIndex
     RAG --> Pangu
+    BGE --> VectorIndex
+    RAG --> VectorIndex
+    RAG --> KnowledgeGraph
+    
+    %% 题目选择器相关连接
     Selector --> RAG
     Selector --> BKT
+    Selector --> Pangu
+    Selector --> QuestionDB
+    
+    %% 评估器相关连接
     Evaluator --> Pangu
+    Evaluator --> BKT
     
-    BGE --> VectorIndex
-    BGE --> QuestionDB
+    %% 可视化器相关连接
+    Visualizer --> QuestionDB
+    
+    %% 硬件加速
     Pangu --> NPU
-    
-    QuestionDB --> VectorIndex
     
     style GradioUI fill:#E3F2FD
     style SystemCore fill:#F3E5F5
     style Pangu fill:#FFF3E0
     style BGE fill:#FFF3E0
     style NPU fill:#E0E0E0
+    style RAG fill:#E1BEE7
+    style Selector fill:#E1BEE7
+    style Evaluator fill:#E1BEE7
+    style Visualizer fill:#E1BEE7
 ```
 
 ### 主要技术栈
@@ -189,24 +216,30 @@ graph LR
 flowchart TD
     Start([学生开始答题]) --> BKT1[【BKT算法】<br/>实时追踪知识点掌握度]
     BKT1 --> RAG[【RAG引擎】<br/>基于向量检索查找相关题目]
-    RAG --> KG[【知识图谱】<br/>分析题目和知识点关系]
-    KG --> Selector[【题目选择器】<br/>结合BKT+RAG+知识图谱<br/>智能推荐最适合的题目]
-    Selector --> Answer[学生答题]
-    Answer --> Evaluator[【评估器】<br/>使用OpenPangu评估答案]
-    Evaluator --> BKT2[【BKT算法】<br/>更新学生掌握度]
+    RAG --> EntityExtract[【盘古：实体关系提取】<br/>提取实体和关系<br/>构建知识子图]
+    EntityExtract --> KG[【知识图谱】<br/>分析题目和知识点关系]
+    KG --> Selector[【题目选择器】<br/>结合BKT+RAG+知识图谱<br/>智能推荐候选题目]
+    Selector --> QuestionSelect[【盘古：题目互选】<br/>从互选题目中选择<br/>一道最合适的题目]
+    QuestionSelect --> Answer[学生答题]
+    Answer --> AnswerJudge[【盘古：答案评判】<br/>评判答案正误]
+    AnswerJudge --> BKT2[【BKT算法】<br/>更新学生掌握度]
     BKT2 --> Decision{还有题目?}
     Decision -->|是| Next[继续下一题]
-    Decision -->|否| Report[生成学习报告]
+    Decision -->|否| Analysis[【盘古：分析总结】<br/>分析学习情况<br/>生成总结报告]
     Next --> BKT1
+    Analysis --> Report[生成学习报告]
     Report --> End([结束])
     
     style Start fill:#E8F5E9
     style BKT1 fill:#E3F2FD
     style RAG fill:#F3E5F5
+    style EntityExtract fill:#FFE0B2
     style KG fill:#FFF3E0
     style Selector fill:#E1BEE7
-    style Evaluator fill:#FFE0B2
+    style QuestionSelect fill:#FFE0B2
+    style AnswerJudge fill:#FFE0B2
     style BKT2 fill:#E3F2FD
+    style Analysis fill:#FFE0B2
     style Report fill:#C8E6C9
     style End fill:#FFCDD2
 ```
@@ -288,8 +321,38 @@ hf download BAAI/bge-small-zh-v1.5 --local-dir /app/education/models/bge-small-z
 hf download BAAI/bge-small-zh-v1.5
 ```
 
+### 4. 下载OpenPangu-Embedded-7B-V1.1模型
 
-### 4. 准备题库数据
+**重要提示**：OpenPangu模型采用 OPENPANGU MODEL LICENSE AGREEMENT VERSION 1.0 许可证，使用前请仔细阅读并遵守许可协议条款。
+
+模型地址：https://huggingface.co/FreedomIntelligence/openPangu-Embedded-7B-V1.1
+
+```bash
+# 安装Hugging Face CLI（如果未安装）
+curl -LsSf https://hf.co/cli/install.sh | bash
+
+# 创建模型目录
+mkdir -p /opt/pangu
+
+# 下载模型到指定目录
+hf download FreedomIntelligence/openPangu-Embedded-7B-V1.1 --local-dir /opt/pangu/openPangu-Embedded-7B-V1.1
+```
+
+**验证模型文件**：
+
+```bash
+# 检查模型文件是否存在
+ls -lh /opt/pangu/openPangu-Embedded-7B-V1.1/
+
+# 应该包含模型权重文件（如 .bin, .safetensors 等）和配置文件（config.json, tokenizer.json 等）
+```
+
+**注意事项**：
+- 模型文件较大（约14GB），请确保有足够的存储空间
+- 下载可能需要较长时间，建议使用稳定的网络连接
+- 模型路径必须与 `PANGU_MODEL_PATH` 环境变量配置一致（默认 `/opt/pangu/openPangu-Embedded-7B-V1.1`）
+
+### 5. 准备题库数据
 
 将题目数据文件放置在 `education/data/` 目录下：
 
@@ -387,7 +450,6 @@ export BGE_MODEL_PATH="/path/to/bge/model"
 
 ## 📖 使用指南
 
-> 补充功能介绍，加截图
 ![初始](education/image/微信图片_2025111211331860_1.jpg)
 ### 开始智能测评
 
@@ -478,23 +540,20 @@ BUSL 1.1 是一种源代码可见的许可证，允许：
 
 **OpenPangu模型采用 OPENPANGU MODEL LICENSE AGREEMENT VERSION 1.0 许可证**
 
-**OpenPangu是华为技术有限公司的商标。**
-
 使用OpenPangu模型时，必须遵守OPENPANGU MODEL LICENSE AGREEMENT VERSION 1.0的所有条款和条件，包括：
 - 地理限制：不能在欧盟境内使用
 - 归属声明：必须包含OpenPangu的归属声明
 - 许可证通知：必须包含许可证副本或链接
 
 有关详细信息，请参阅：
-- OpenPangu官方仓库: https://ai.gitcode.com/ascend-tribe/openpangu-embedded-1b-model
+- OpenPangu 7B模型 (Hugging Face): https://huggingface.co/FreedomIntelligence/openPangu-Embedded-7B-V1.1
+- OpenPangu官方仓库: https://ai.gitcode.com/ascend-tribe/openpangu-embedded-7b-model（如有）
 
-### 第三方开源软件
+### 主要依赖第三方开源软件
 
-本项目还使用了多个开源软件，我们感谢所有开源贡献者的工作。
+本项目基于以下优秀的开源项目构建，我们感谢所有开源贡献者的工作。
 
-### 主要依赖
-
-本项目基于以下优秀的开源项目构建（版本信息基于 requirements.txt）：
+（版本信息基于 requirements.txt）：
 
 - **[Gradio](https://www.gradio.app/)** (5.49.1, Apache 2.0) - 用于构建交互式Web界面
 - **[PyTorch](https://pytorch.org/)** (2.5.1, BSD 3-Clause) - 深度学习框架
@@ -508,26 +567,15 @@ BUSL 1.1 是一种源代码可见的许可证，允许：
 - **[FastAPI](https://fastapi.tiangolo.com/)** (0.117.1, MIT) - 高性能Web API框架
 - **[Accelerate](https://github.com/huggingface/accelerate)** (1.10.1, Apache 2.0) - 模型加速库
 
-### 许可证文档
+### 第三方依赖许可证
+
+本项目使用的第三方依赖许可证类型主要是**商业友好**的：
 
 完整的开源软件清单和许可证信息请参考：
 
 - 📋 [OPEN_SOURCE_LICENSES.md](OPEN_SOURCE_LICENSES.md) - 完整的依赖清单和许可证信息
 - 📄 [NOTICE](NOTICE) - 开源软件声明文件
 - 📦 [requirements.txt](requirements.txt) - Python 依赖清单
-
-### 许可证类型
-
-本项目使用的所有依赖都采用**商业友好**的开源许可证：
-
-- ✅ **Apache 2.0** - 允许商业使用，专利友好
-- ✅ **BSD 3-Clause** - 允许商业使用，限制最少
-- ✅ **MIT** - 允许商业使用，限制最少
-
-**重要说明**: 
-- 本项目代码和第三方依赖采用商业友好的开源许可证
-- **OpenPangu模型的使用需遵守OPENPANGU MODEL LICENSE AGREEMENT VERSION 1.0**
-- 使用本项目时，请确保理解并遵守OpenPangu模型的许可协议条款
 
 ### AI 模型
 
@@ -536,7 +584,7 @@ BUSL 1.1 是一种源代码可见的许可证，允许：
 - **OpenPangu模型** (openPanGu-Embedded-7B-V1.1)
   - 来源: 华为技术有限公司 (Huawei Technologies Co., Ltd.)
   - 许可证: **OPENPANGU MODEL LICENSE AGREEMENT VERSION 1.0**
-  - 参考: https://ai.gitcode.com/ascend-tribe/openpangu-embedded-1b-model
+  - 参考: https://huggingface.co/FreedomIntelligence/openPangu-Embedded-7B-V1.1
   - **重要**: 本项目使用OpenPangu模型，需遵守OPENPANGU MODEL LICENSE AGREEMENT VERSION 1.0许可协议
 
 - **BGE-small-zh-v1.5**
@@ -567,14 +615,8 @@ BUSL 1.1 是一种源代码可见的许可证，允许：
 
 ### 致谢
 
-本项目由**深圳大数据研究院 (SRIBD)** 的**AI系统及应用课题组**开发和维护。
-
-感谢所有开源社区和贡献者，他们的工作使本项目成为可能。
-
 特别感谢：
-- **深圳大数据研究院 (SRIBD)** - 为本项目提供支持和资源
-- **AI系统及应用课题组** - 项目开发团队
-- **华为技术有限公司** - 提供OpenPangu模型
+- **华为技术有限公司** - 提供OpenPangu模型和昇腾计算资源支持
 - **北京智源人工智能研究院 (BAAI)** - 提供BGE嵌入模型
 - **Hugging Face** - 提供Transformers库和模型平台
 
@@ -688,7 +730,7 @@ A: 目前报告在Web界面显示。可以复制报告内容或使用浏览器�
 ### Q: 容器启动失败怎么办？
 
 A: 检查以下几点：
-1. 查看容器日志：`docker logs personal-exam`（本地）或 `docker logs docker_person_exam`（远程）
+1. 查看容器日志：`docker logs personal-exam`
 2. 确认端口7860未被占用（本地部署）
 3. 确认NPU设备正确挂载（如果使用NPU）
 4. 确认模型文件路径正确
@@ -706,7 +748,7 @@ A: 远程SSH部署步骤：
 
 ## 📝 更新日志
 
-### Version 3.1.0 (当前版本)
+### Version 1.0.0 (当前版本)
 
 - ✨ 新增细粒度知识点追踪（支持知识点小类）
 - ✨ 新增RAG引擎驱动的智能题目推荐
@@ -715,17 +757,6 @@ A: 远程SSH部署步骤：
 - 🐛 修复题目选择策略问题
 - 🐛 修复学生状态保存问题
 - 📚 完善文档和许可证信息
-
-### Version 3.0.0
-
-- 重构系统架构
-- 移除LightRAG依赖，使用本地RAG引擎
-- 优化BKT算法实现
-
-### Version 2.0.0
-
-- 添加BKT算法支持
-- 添加知识图谱功能
 
 ## 📞 联系方式
 
