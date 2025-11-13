@@ -10,7 +10,7 @@
 
 **开发单位**: 深圳市大数据研究院 (SRIBD) | **课题组**: AI系统与应用课题组
 
-**Powered by OpenPangu**
+**Powered by OpenPangu. OpenPangu is a trademark of Huawei Technologies Co., Ltd.**
 
 **许可证**: 
 - **项目代码**: 本项目代码采用 **BSL 1.1 (Business Source License 1.1)** 许可证，允许非商业使用，商业使用需要授权。

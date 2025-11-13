@@ -42,8 +42,7 @@ Important Notes
    https://ai.gitcode.com/ascend-tribe/openpangu-embedded-1b-model/blob/main/LICENSE
 
 2. **Third-Party Dependencies**: This project includes third-party open-source
-   software, each with its own license. Please refer to NOTICE and
-   OPEN_SOURCE_LICENSES.md for complete information.
+   software, each with its own license. Please refer to NOTICE for complete information.
 
 3. **Commercial Licensing**: For commercial use of this Software, please
    contact the Licensor to obtain a commercial license.
