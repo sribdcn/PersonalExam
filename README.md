@@ -280,7 +280,7 @@ curl -LsSf https://hf.co/cli/install.sh | bash # Make sure the hf CLI is install
 
 # 方式1: 直接下载到项目目录（推荐）
 # 下载到项目 models 目录，与配置文件中的默认路径一致
-hf download BAAI/bge-small-zh-v1.5 --local-dir education/models/bge-small-zh-v1.5
+hf download BAAI/bge-small-zh-v1.5 --local-dir /app/education/models/bge-small-zh-v1.5
 
 # 方式2: 使用默认位置下载
 # 默认下载到: ~/.cache/huggingface/hub/
