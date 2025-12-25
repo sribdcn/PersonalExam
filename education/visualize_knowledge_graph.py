@@ -1,5 +1,3 @@
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """
 知识图谱可视化脚本
 支持多种可视化方式：Plotly 3D、Plotly 2D、NetworkX静态图
@@ -7,11 +5,13 @@
 
 import sys
 import logging
+import os
 from pathlib import Path
 import pickle
 import argparse
 
-PROJECT_ROOT = Path(__file__).parent
+# 项目根目录设置
+PROJECT_ROOT = Path(__file__).parent.absolute()
 sys.path.insert(0, str(PROJECT_ROOT))
 
 import networkx as nx
@@ -35,7 +35,13 @@ class KnowledgeGraphVisualizer:
         Args:
             kg_path: 知识图谱缓存文件路径
         """
-        self.kg_path = Path(kg_path)
+        # 将相对路径转换为绝对路径
+        kg_path = Path(kg_path)
+        if not kg_path.is_absolute():
+            # 如果是相对路径，相对于项目根目录
+            kg_path = PROJECT_ROOT / kg_path
+        
+        self.kg_path = kg_path
         self.graph = None
         
         # 节点颜色配置
@@ -77,11 +83,10 @@ class KnowledgeGraphVisualizer:
             with open(self.kg_path, 'rb') as f:
                 self.graph = pickle.load(f)
             
-            logger.info(f"✅ 知识图谱加载成功:")
+            logger.info(f"知识图谱加载成功:")
             logger.info(f"   - 节点数: {self.graph.number_of_nodes()}")
             logger.info(f"   - 边数: {self.graph.number_of_edges()}")
             
-            # 统计节点类型
             node_types = {}
             for node, data in self.graph.nodes(data=True):
                 node_type = data.get('type', 'unknown')
@@ -126,11 +131,11 @@ class KnowledgeGraphVisualizer:
                            show_edges: bool = True, 
                            max_nodes: int = None):
 
-        logger.info("🎨 正在生成 Plotly 3D 可视化...")
+        logger.info("正在生成 Plotly 3D 可视化...")
         
         graph = self.graph
         if max_nodes and self.graph.number_of_nodes() > max_nodes:
-            logger.info(f"⚠️  节点数 {self.graph.number_of_nodes()} 超过限制 {max_nodes}，进行采样...")
+            logger.info(f"节点数 {self.graph.number_of_nodes()} 超过限制 {max_nodes}，进行采样...")
 
             important_nodes = [n for n, d in self.graph.nodes(data=True) 
                              if d.get('type') in ['major_point', 'minor_point', 'concept', 'method']]
@@ -146,7 +151,7 @@ class KnowledgeGraphVisualizer:
                 nodes_to_keep = important_nodes[:max_nodes]
             
             graph = self.graph.subgraph(nodes_to_keep).copy()
-            logger.info(f"✅ 采样后节点数: {graph.number_of_nodes()}")
+            logger.info(f"采样后节点数: {graph.number_of_nodes()}")
         
         logger.info("📐 计算节点位置（3D spring layout）...")
         pos = nx.spring_layout(graph, dim=3, k=0.5, iterations=50)
@@ -241,7 +246,7 @@ class KnowledgeGraphVisualizer:
         )
 
         fig.write_html(output_path)
-        logger.info(f"✅ 3D 可视化已保存到: {output_path}")
+        logger.info(f"3D 可视化已保存到: {output_path}")
         
         return fig
     
@@ -249,11 +254,11 @@ class KnowledgeGraphVisualizer:
                            layout: str = 'spring',
                            max_nodes: int = None):
 
-        logger.info(f"🎨 正在生成 Plotly 2D 可视化（布局: {layout}）...")
+        logger.info(f"正在生成 Plotly 2D 可视化（布局: {layout}）...")
         
         graph = self.graph
         if max_nodes and self.graph.number_of_nodes() > max_nodes:
-            logger.info(f"⚠️  节点数过多，采样到 {max_nodes} 个节点...")
+            logger.info(f"节点数过多，采样到 {max_nodes} 个节点...")
             import random
             important_nodes = [n for n, d in self.graph.nodes(data=True) 
                              if d.get('type') in ['major_point', 'minor_point', 'concept', 'method']]
@@ -344,7 +349,6 @@ class KnowledgeGraphVisualizer:
             )
             node_traces.append(node_trace)
         
-        # 创建图形
         fig = go.Figure(data=edge_traces + node_traces)
         
         title_text = f"知识图谱 2D 可视化<br><sub>节点: {graph.number_of_nodes()} | 边: {graph.number_of_edges()}</sub>"
@@ -361,7 +365,7 @@ class KnowledgeGraphVisualizer:
         )
         
         fig.write_html(output_path)
-        logger.info(f"✅ 2D 可视化已保存到: {output_path}")
+        logger.info(f"2D 可视化已保存到: {output_path}")
         
         return fig
     
@@ -372,17 +376,15 @@ class KnowledgeGraphVisualizer:
 
         logger.info("🎨 正在生成 Matplotlib 静态可视化...")
         
-        # 设置中文字体
         try:
             plt.rcParams['font.sans-serif'] = ['SimHei', 'Arial Unicode MS', 'DejaVu Sans']
             plt.rcParams['axes.unicode_minus'] = False
         except:
-            logger.warning("⚠️  无法设置中文字体，可能显示乱码")
+            logger.warning("无法设置中文字体，可能显示乱码")
         
-        # 节点采样
         graph = self.graph
         if self.graph.number_of_nodes() > max_nodes:
-            logger.info(f"⚠️  节点数过多，采样到 {max_nodes} 个节点...")
+            logger.info(f"节点数过多，采样到 {max_nodes} 个节点...")
             import random
             important_nodes = [n for n, d in self.graph.nodes(data=True) 
                              if d.get('type') in ['major_point', 'minor_point', 'concept', 'method']]
@@ -397,7 +399,6 @@ class KnowledgeGraphVisualizer:
             
             graph = self.graph.subgraph(sampled).copy()
         
-        # 计算布局
         if layout == 'spring':
             pos = nx.spring_layout(graph, k=1.5, iterations=50)
         elif layout == 'circular':
@@ -407,12 +408,10 @@ class KnowledgeGraphVisualizer:
         else:
             pos = nx.spring_layout(graph)
         
-        # 创建画布
         fig, ax = plt.subplots(figsize=figsize, facecolor='white')
         ax.set_facecolor('white')
         ax.axis('off')
         
-        # 绘制边
         nx.draw_networkx_edges(
             graph, pos,
             edge_color='#CCCCCC',
@@ -421,7 +420,6 @@ class KnowledgeGraphVisualizer:
             ax=ax
         )
         
-        # 按类型绘制节点
         node_types = set(data.get('type', 'default') for _, data in graph.nodes(data=True))
         
         type_names = {
@@ -470,7 +468,7 @@ class KnowledgeGraphVisualizer:
         # 保存
         plt.tight_layout()
         plt.savefig(output_path, dpi=300, bbox_inches='tight', facecolor='white')
-        logger.info(f"✅ 静态可视化已保存到: {output_path}")
+        logger.info(f"静态可视化已保存到: {output_path}")
         
         plt.close()
     
@@ -479,7 +477,7 @@ class KnowledgeGraphVisualizer:
         stats = self.get_statistics()
         
         print("\n" + "=" * 70)
-        print("📊 知识图谱统计信息")
+        print("知识图谱统计信息")
         print("=" * 70)
         print(f"总节点数: {stats['nodes']}")
         print(f"总边数: {stats['edges']}")
@@ -502,8 +500,12 @@ class KnowledgeGraphVisualizer:
 def main():
     """主函数"""
     parser = argparse.ArgumentParser(description='知识图谱可视化工具')
-    parser.add_argument('--kg-path', type=str, default='/data/weitianyu/teach_system/education/data/knowledge_graph.pkl',
-                       help='知识图谱缓存文件路径')
+    
+    default_kg_path = os.environ.get('KG_PATH', 'data/knowledge_graph.pkl')
+    default_output_dir = os.environ.get('VIS_OUTPUT_DIR', 'visualizations')
+    
+    parser.add_argument('--kg-path', type=str, default=default_kg_path,
+                       help=f'知识图谱缓存文件路径 (默认: {default_kg_path})')
     parser.add_argument('--mode', type=str, default='all',
                        choices=['2d', '3d', 'static', 'all'],
                        help='可视化模式')
@@ -512,29 +514,34 @@ def main():
                        help='布局算法')
     parser.add_argument('--max-nodes', type=int, default=None,
                        help='最大显示节点数（None表示全部）')
-    parser.add_argument('--output-dir', type=str, default='/data/weitianyu/teach_system/education/visualizations',
-                       help='输出目录')
+    parser.add_argument('--output-dir', type=str, default=default_output_dir,
+                       help=f'输出目录 (默认: {default_output_dir})')
     
     args = parser.parse_args()
     
     print("=" * 70)
-    print("🎨 知识图谱可视化工具")
+    print("知识图谱可视化工具")
     print("=" * 70)
+    print(f"项目根目录: {PROJECT_ROOT}")
     
     output_dir = Path(args.output_dir)
+    if not output_dir.is_absolute():
+        output_dir = PROJECT_ROOT / output_dir
+    
     output_dir.mkdir(parents=True, exist_ok=True)
+    print(f"输出目录: {output_dir.absolute()}")
 
     visualizer = KnowledgeGraphVisualizer(args.kg_path)
 
     if not visualizer.load_graph():
-        logger.error("❌ 无法加载知识图谱，退出")
+        logger.error("无法加载知识图谱，退出")
         return
 
     visualizer.print_statistics()
 
     try:
         if args.mode in ['2d', 'all']:
-            logger.info("🎯 生成 2D Plotly 可视化...")
+            logger.info("生成 2D Plotly 可视化...")
             output_2d = output_dir / "knowledge_graph_2d.html"
             visualizer.visualize_plotly_2d(
                 output_path=str(output_2d),
@@ -543,7 +550,7 @@ def main():
             )
         
         if args.mode in ['3d', 'all']:
-            logger.info("🎯 生成 3D Plotly 可视化...")
+            logger.info("生成 3D Plotly 可视化...")
             output_3d = output_dir / "knowledge_graph_3d.html"
             visualizer.visualize_plotly_3d(
                 output_path=str(output_3d),
@@ -552,25 +559,25 @@ def main():
             )
         
         if args.mode in ['static', 'all']:
-            logger.info("🎯 生成 Matplotlib 静态可视化...")
+            logger.info("生成 Matplotlib 静态可视化...")
             output_static = output_dir / "knowledge_graph_static.png"
             visualizer.visualize_matplotlib(
                 output_path=str(output_static),
                 layout=args.layout,
-                max_nodes=500  # 静态图限制节点数
+                max_nodes=500  
             )
         
         print("\n" + "=" * 70)
-        print("✅ 可视化完成！")
+        print("可视化完成！")
         print("=" * 70)
-        print(f"📁 输出目录: {output_dir.absolute()}")
-        print(f"   - 2D 交互式: knowledge_graph_2d.html")
-        print(f"   - 3D 交互式: knowledge_graph_3d.html")
-        print(f"   - 静态图片: knowledge_graph_static.png")
+        print(f"输出目录: {output_dir.absolute()}")
+        print(f" - 2D 交互式: knowledge_graph_2d.html")
+        print(f" - 3D 交互式: knowledge_graph_3d.html")
+        print(f" - 静态图片: knowledge_graph_static.png")
         print("=" * 70)
         
     except Exception as e:
-        logger.error(f"❌ 可视化失败: {e}")
+        logger.error(f"可视化失败: {e}")
         import traceback
         traceback.print_exc()
 
