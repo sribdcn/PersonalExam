@@ -2,7 +2,7 @@
 
 **Personalized Question Generation System Based on LLM and Knowledge Graph Collaboration**
 
-[![Version](https://img.shields.io/badge/version-3.1.0-blue.svg)](https://github.com/sribdcn/PersonalExam)
+[![Version](https://img.shields.io/badge/version-2.0.0-blue.svg)](https://github.com/sribdcn/PersonalExam)
 [![Python](https://img.shields.io/badge/python-3.11.12-green.svg)](https://www.python.org/)
 [![License](https://img.shields.io/badge/license-BSL%201.1-orange.svg)](LICENSE)
 
@@ -133,15 +133,19 @@ graph LR
 
 ```mermaid
 flowchart TD
-    Start([学生开始答题]) --> BKT1[【BKT算法】<br/>实时追踪知识点掌握度]
-    BKT1 --> RAG[【RAG引擎】<br/>基于向量检索查找相关题目]
-    RAG --> EntityExtract[【盘古：实体关系提取】<br/>提取实体和关系<br/>构建知识子图]
-    EntityExtract --> KG[【知识图谱】<br/>分析题目和知识点关系]
-    KG --> Selector[【题目选择器】<br/>结合BKT+RAG+知识图谱<br/>智能推荐候选题目]
-    Selector --> QuestionSelect[【盘古：题目互选】<br/>从互选题目中选择<br/>一道最合适的题目]
+    Start([用户登录系统]) --> Auth{身份验证}
+    Auth -->|学生| StudentFlow[学生流程]
+    Auth -->|教师| TeacherFlow[教师流程]
+    
+    StudentFlow --> BKT1[【BKT算法】<br/>从数据库读取学生掌握度]
+    BKT1 --> RAG[【知识图谱RAG引擎】<br/>基于知识图谱检索相关题目]
+    RAG --> EntityExtract[【知识图谱】<br/>分析题目和知识点关系]
+    EntityExtract --> Selector[【题目选择器】<br/>结合BKT+RAG+知识图谱<br/>智能推荐候选题目]
+    Selector --> QuestionSelect[【盘古：题目互选】<br/>从候选题目中选择<br/>一道最合适的题目]
     QuestionSelect --> Answer[学生答题]
     Answer --> AnswerJudge[【盘古：答案评判】<br/>评判答案正误]
-    AnswerJudge --> BKT2[【BKT算法】<br/>更新学生掌握度]
+    AnswerJudge --> SaveDB[【数据库】<br/>保存答题记录]
+    SaveDB --> BKT2[【BKT算法】<br/>更新学生掌握度到数据库]
     BKT2 --> Decision{还有题目?}
     Decision -->|是| Next[继续下一题]
     Decision -->|否| Analysis[【盘古：分析总结】<br/>分析学习情况<br/>生成总结报告]
@@ -149,18 +153,72 @@ flowchart TD
     Analysis --> Report[生成学习报告]
     Report --> End([结束])
     
+    TeacherFlow --> Manage[【教师管理功能】<br/>题库管理、学生管理、数据查看]
+    
     style Start fill:#E8F5E9
+    style Auth fill:#FFF3E0
+    style StudentFlow fill:#E3F2FD
+    style TeacherFlow fill:#F3E5F5
     style BKT1 fill:#E3F2FD
     style RAG fill:#F3E5F5
-    style EntityExtract fill:#FFE0B2
-    style KG fill:#FFF3E0
+    style EntityExtract fill:#FFF3E0
     style Selector fill:#E1BEE7
     style QuestionSelect fill:#FFE0B2
     style AnswerJudge fill:#FFE0B2
+    style SaveDB fill:#C8E6C9
     style BKT2 fill:#E3F2FD
     style Analysis fill:#FFE0B2
     style Report fill:#C8E6C9
     style End fill:#FFCDD2
+    style Manage fill:#E1BEE7
+```
+
+### 系统架构
+
+```mermaid
+graph TB
+    subgraph 前端层["前端层"]
+        UI[Gradio UI界面<br/>enhanced_main_ui.py]
+        Login[登录注册系统]
+    end
+    
+    subgraph 业务逻辑层["业务逻辑层"]
+        Core[系统核心<br/>system_core_db.py]
+        BKT[BKT算法适配器<br/>bkt_database_adapter.py]
+        RAG[RAG引擎<br/>rag_engine.py]
+        KG[知识图谱构建器<br/>kg_builder.py]
+    end
+    
+    subgraph 数据层["数据层"]
+        DB[(SQLite数据库<br/>database.py)]
+        Cache[知识图谱缓存<br/>knowledge_graph.pkl]
+    end
+    
+    subgraph 模型层["模型层"]
+        LLM[盘古7B模型<br/>llm_models.py]
+        Embed[BGE嵌入模型<br/>embedding_model.py]
+    end
+    
+    UI --> Login
+    Login --> Core
+    Core --> BKT
+    Core --> RAG
+    Core --> KG
+    BKT --> DB
+    RAG --> KG
+    RAG --> Embed
+    KG --> LLM
+    KG --> Cache
+    Core --> DB
+    Core --> LLM
+    Core --> Embed
+    
+    style UI fill:#BBDEFB
+    style Login fill:#C8E6C9
+    style Core fill:#FFF9C4
+    style DB fill:#FFE0B2
+    style LLM fill:#E1BEE7
+    style Embed fill:#E1BEE7
 ```
 
 ## 💻 系统要求
@@ -220,8 +278,9 @@ docker cp /home/xxx/PersonalExam/. docker_person_exam:/app/ # xxx为你上传的
 ![显示](education/image/8ebce37f131e58737321f7b3559c7c81.png)
 **注意**：
 - 容器内代码路径: `/app/education/`
-- 数据目录: `/app/education/data/`（可通过volume挂载持久化）
+- 数据目录: `/app/education/data/`（包含数据库文件 `education_system.db`，建议通过volume挂载持久化）
 - 日志目录: `/app/education/logs/`（可通过volume挂载持久化）
+- 数据库文件: `/app/education/data/education_system.db`（SQLite数据库，包含所有用户、题目和答题记录）
 
 ### 3. 下载bge-small-zh-v1.5模型
 
@@ -274,10 +333,21 @@ ls -lh /opt/pangu/openPangu-Embedded-7B-V1.1/
 
 ### 5. 准备题库数据
 
-将题目数据文件放置在 `education/data/` 目录下：
+#### 方式1: 通过UI导入（推荐）
+
+系统启动后，使用教师账号登录，在"题库管理"标签页上传JSON格式的题目文件。
+
+#### 方式2: 手动迁移数据
+
+如果已有JSON格式的题库文件，可以使用迁移脚本：
 
 ```bash
-education/data/question_database_2.json
+# 进入容器
+docker exec -it docker_person_exam /bin/bash
+cd /app/education
+
+# 运行迁移脚本
+python migrate_to_database.py
 ```
 
 题目JSON格式示例：
@@ -296,7 +366,11 @@ education/data/question_database_2.json
 ]
 ```
 
-### 5. 启动系统
+**注意**: 系统首次启动时会自动创建默认用户账号：
+- 学生账号: `student_001` / `123456`
+- 教师账号: `teacher` / `admin123`
+
+### 6. 启动系统
 
 默认模型路径（通过环境变量配置）：
 - 盘古7B模型: 通过 `PANGU_MODEL_PATH` 环境变量配置，默认 `/opt/pangu/openPangu-Embedded-7B-V1.1`
@@ -350,6 +424,9 @@ SMART_QUESTION_CONFIG = {
     "default_question_count": 10,
     "weak_threshold": 0.4,  # 薄弱点阈值
     "weak_point_focus_ratio": 0.7,  # 薄弱点题目比例
+    "rebuild_kg": False,  # 是否强制重建知识图谱
+    "use_kg_rag": True,  # 是否使用知识图谱RAG
+    "kg_rag_top_k": 5,  # 知识图谱RAG返回的候选题目数量
 }
 
 # UI配置
@@ -358,7 +435,27 @@ UI_CONFIG = {
     "share": False,
     "server_name": "0.0.0.0"
 }
+
+# 日志配置
+LOGGING_CONFIG = {
+    "level": "INFO",
+    "format": "%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+    "log_file": "logs/system.log"
+}
 ```
+
+### 数据库配置
+
+数据库文件路径在 `main.py` 中配置，默认路径为：
+- **数据库文件**: `education/data/education_system.db`
+- **知识图谱缓存**: `education/data/knowledge_graph.pkl`
+- **知识图谱哈希**: `education/data/kg_hash.txt`
+
+数据库会自动创建，包含以下表：
+- `users`: 用户表（学生和教师）
+- `questions`: 题目表
+- `student_states`: 学生状态表（BKT参数）
+- `answer_records`: 答题记录表
 
 ### 环境变量
 
@@ -367,76 +464,117 @@ UI_CONFIG = {
 ```bash
 export PANGU_MODEL_PATH="/path/to/pangu/model"
 export BGE_MODEL_PATH="/path/to/bge/model"
+export GRADIO_SERVER_PORT=7860  # 修改UI端口
 ```
 
 ## 📖 使用指南
 
-![初始](education/image/微信图片_2025111211331860_1.jpg)
-### 开始智能测评
+### 🔐 用户登录
 
-1. **输入学生ID**: 在"智能测评"标签页输入学生ID（如 `student_001`）
-2. **选择题目数量**: 使用滑块选择题目数量（5-20题）
+1. **访问系统**: 打开浏览器访问系统地址（默认 http://localhost:7860）
+2. **登录账号**: 
+   - 学生账号：`student_001` / `123456`
+   - 教师账号：`teacher` / `admin123`
+3. **注册新用户**: 点击"注册新用户"按钮，填写用户名、密码和角色（学生/教师）
+4. **登录后**: 根据角色显示不同的功能界面
+
+![初始](education/image/微信图片_2025111211331860_1.jpg)
+
+### 🎯 学生功能
+
+#### 开始智能测评
+
+1. **登录学生账号**: 使用学生账号登录系统
+2. **选择题目数量**: 在"智能测评"标签页使用滑块选择题目数量（5-20题）
 3. **开始测评**: 点击"开始智能测评"按钮
 4. **答题**: 系统会根据学生掌握度智能推荐题目，学生答题后获得即时反馈
 5. **查看报告**: 测评完成后，系统会生成个性化的评估报告
+
 ![2](education/image/微信图片_2025111211331860_2.jpg)
 
 ![2](education/image/微信图片_2025111211331860_3.jpg)
-### 学习分析
+
+#### 学习分析
 
 1. 切换到"学习分析"标签页
-2. 输入学生ID
-3. 点击"分析"按钮
-4. 查看：
+2. 点击"分析"按钮（自动使用当前登录的学生账号）
+3. 查看：
    - 整体掌握度统计
    - 薄弱知识点列表
    - 详细学习档案
+
 ![2](education/image/59ced7bb989570f31c327b14d0abf9ff.png)
 ![2](education/image/036e6c21995062bdcf82d63a537d9cca.png)
-### 知识图谱
+
+#### 知识图谱
 
 1. 切换到"知识图谱"标签页
 2. 选择布局算法（spring/circular/kamada_kawai）
 3. 查看题目、知识点和难度之间的关系网络
+
 ![2](education/image/9d9937f6ba0c093f3ed85f806d972cd6.png)
 
+### 👨‍🏫 教师功能
 
-### 系统管理
+#### 题库管理
 
-1. **题库管理**: 导入JSON格式的题目文件
-2. **系统信息**: 查看系统状态和配置信息
-3. **模型管理**: 重新加载模型或清除缓存
+1. **登录教师账号**: 使用教师账号登录系统
+2. **导入题目**: 在"题库管理"标签页上传JSON格式的题目文件
+3. **查看统计**: 查看题库统计信息（总题目数、知识点分布等）
+4. **数据迁移**: 系统支持从JSON文件自动迁移到数据库
+
+#### 学生管理
+
+1. 切换到"学生管理"标签页
+2. 查看所有学生列表
+3. 查看每个学生的详细学习数据
+4. 导出学生数据
+
+#### 系统管理
+
+1. **系统信息**: 查看系统状态和配置信息
+2. **模型管理**: 重新加载模型或清除缓存
+3. **数据统计**: 查看系统整体数据统计
+
 ![2](education/image/0148140158105.png)
 ## 📁 项目结构
 
 ```
 PersonalExam/
 ├── education/                    # 主程序目录
-│   ├── main.py                  # 程序入口
+│   ├── main.py                  # 程序入口（数据库版本，带登录功能）
 │   ├── config.py                # 配置文件
-│   ├── system_core.py           # 系统核心
-│   ├── clean.py                 # 清理脚本
-│   ├── test.py                  # 测试脚本
+│   ├── database.py              # 数据库管理器（SQLite）
+│   ├── system_core.py           # 系统核心（JSON版本，已弃用）
+│   ├── system_core_db.py        # 系统核心（数据库版本）
+│   ├── bkt_database_adapter.py  # BKT算法数据库适配器
+│   ├── enhanced_main_ui.py      # 增强UI（带登录注册系统）
+│   ├── migrate_to_database.py   # 数据迁移脚本（JSON→数据库）
+│   ├── visualize_knowledge_graph.py  # 知识图谱可视化脚本
 │   ├── data/                    # 数据目录
-│   │   ├── question_database.json      # 题库（旧版）
-│   │   ├── question_database_2.json    # 题库（当前版本）
-│   │   └── student_states.json          # 学生状态
+│   │   ├── education_system.db  # SQLite数据库（用户、题目、记录）
+│   │   ├── knowledge_graph.pkl  # 知识图谱缓存
+│   │   ├── kg_hash.txt          # 知识图谱哈希（用于检测更新）
+│   │   ├── question_database.json      # 题库（旧版，用于迁移）
+│   │   ├── question_database_2.json    # 题库（用于迁移）
+│   │   └── student_states.json          # 学生状态（旧版，已迁移到数据库）
 │   ├── models/                  # 模型模块
-│   │   ├── llm_models.py        # 语言模型
-│   │   └── embedding_model.py   # 嵌入模型
+│   │   ├── llm_models.py        # 语言模型（盘古7B）
+│   │   └── embedding_model.py   # 嵌入模型（BGE）
 │   ├── data_management/         # 数据管理
-│   │   └── question_db.py       # 题库数据库
-│   ├── knowledge_management/     # 知识管理
-│   │   └── rag_engine.py        # RAG引擎
+│   │   └── question_db.py       # 题库数据库（旧版，已整合到database.py）
+│   ├── knowledge_management/    # 知识管理
+│   │   ├── kg_builder.py        # 知识图谱构建器
+│   │   └── rag_engine.py        # RAG引擎（基于知识图谱）
 │   ├── utils/                   # 工具模块
-│   │   ├── bkt_algorithm.py     # BKT算法
+│   │   ├── bkt_algorithm.py     # BKT算法（基础实现）
 │   │   ├── evaluator.py         # 评估器
 │   │   └── question_generator.py # 题目生成器
 │   ├── visualization/           # 可视化
 │   │   ├── kg_visualizer.py     # 知识图谱可视化
-│   │   └── radar_chart.py        # 雷达图可视化
-│   ├── ui/                       # UI界面
-│   │   └── main_ui.py            # Gradio界面
+│   │   └── radar_chart.py       # 雷达图可视化
+│   ├── ui/                       # UI界面（旧版）
+│   │   └── main_ui.py            # Gradio界面（已迁移到enhanced_main_ui.py）
 │   ├── image/                    # 图片资源
 │   │   └── *.png, *.jpg         # 文档和UI使用的图片
 │   └── logs/                     # 日志目录
@@ -642,7 +780,11 @@ A: 是的，本项目使用Docker容器化部署。Docker提供了更好的环�
 
 ### Q: 如何添加新的题目？
 
-A: 可以通过"系统管理"标签页导入JSON格式的题目文件，或者直接编辑挂载的 `education/data/question_database_2.json` 文件。
+A: 有两种方式：
+1. **通过UI导入（推荐）**: 使用教师账号登录，在"题库管理"标签页上传JSON格式的题目文件
+2. **使用迁移脚本**: 将题目JSON文件放在 `education/data/` 目录下，运行 `python migrate_to_database.py` 进行迁移
+
+**注意**: 系统会自动检测题库更新，并在需要时重建知识图谱。
 
 ### Q: 支持哪些知识点？
 
@@ -657,7 +799,12 @@ A: 有三种方式：
 
 ### Q: 系统支持多用户吗？
 
-A: 是的，系统通过学生ID区分不同用户，每个学生有独立的学习档案和状态。数据存储在挂载的volume中，容器重启后数据不会丢失。
+A: 是的，系统支持完整的用户管理系统：
+- **用户注册**: 支持学生和教师两种角色的注册
+- **用户登录**: 每个用户有独立的账号和密码
+- **数据隔离**: 每个学生有独立的学习档案和状态
+- **数据持久化**: 所有数据存储在SQLite数据库中，容器重启后数据不会丢失
+- **默认账号**: 系统提供默认测试账号（学生: `student_001` / `123456`，教师: `teacher` / `admin123`）
 
 ### Q: 如何导出学习报告？
 
@@ -675,16 +822,34 @@ A: 检查以下几点：
 ### Q: 如何进行远程SSH部署？
 
 A: 远程SSH部署步骤：
-1. 使用SSH密钥连接到远程服务器：`ssh -i .cursor/your_ssh_key your_username@your_server_ip`
-2. 上传代码到服务器的 `/home/your_username/Documents/project/PersonalExam` 目录
-3. 创建容器（参考"创建容器"章节）
-4. 复制代码到容器内：`docker cp /home/your_username/Documents/project/PersonalExam/. docker_person_exam:/app/`
+1. 使用SSH密钥连接到远程服务器：`ssh -i .cursor/liqinsi_key liqinsi@1.95.160.102`
+2. 上传代码到服务器的 `/home/liqinsi/Documents/project/PersonalExam` 目录
+3. 创建容器（参考"创建容器"章节，容器名: `docker_person_exam`）
+4. 复制代码到容器内：`docker cp /home/liqinsi/Documents/project/PersonalExam/. docker_person_exam:/app/`
 5. 进入容器：`docker exec -it docker_person_exam /bin/bash`
-6. 在容器内运行：`cd /app/education && python main.py`
+6. 安装依赖：`cd /app && pip install -r requirements.txt -i https://pypi.tuna.tsinghua.edu.cn/simple`
+7. 在容器内运行：`cd /app/education && python main.py`
+
+**注意**: 数据库文件存储在 `education/data/education_system.db`，建议通过volume挂载持久化。
 
 ## 📝 更新日志
 
-### Version 1.0.1 (当前版本)
+### Version 2.0.0 (当前版本)
+
+- ✨ **数据库架构**: 从JSON文件存储迁移到SQLite数据库存储
+- ✨ **用户系统**: 新增用户登录注册功能，支持学生和教师角色分离
+- ✨ **知识图谱**: 新增知识图谱自动构建和RAG引擎
+- ✨ **自动更新**: 知识图谱支持自动检测题库更新并重建
+- ✨ **数据迁移**: 提供从JSON格式到数据库的迁移工具
+- ✨ **增强UI**: 全新的UI界面，支持登录注册和角色权限管理
+- ✨ 细粒度知识点追踪（支持知识点小类）
+- ✨ RAG引擎驱动的智能题目推荐
+- ✨ 知识图谱可视化功能
+- ✨ 盘古7B模型支持
+- ✨ 题目选择策略
+- 📚 完善文档和许可证信息
+
+### Version 1.0.1
 
 - ✨ 新增细粒度知识点追踪（支持知识点小类）
 - ✨ 新增RAG引擎驱动的智能题目推荐
