@@ -68,7 +68,7 @@
 ### 主要技术栈
 
 ```mermaid
-%%{init: {'theme':'base', 'themeVariables': {'primaryBackgroundColor':'#ffffff', 'primaryTextColor':'#000000', 'primaryBorderColor':'#333333', 'lineColor':'#333333', 'secondaryColor':'#f0f0f0', 'tertiaryColor':'#ffffff'}}}%%
+%%{init: {'theme':'base', 'themeVariables': {'background':'#ffffff', 'primaryBackgroundColor':'#ffffff', 'primaryTextColor':'#000000', 'primaryBorderColor':'#333333', 'lineColor':'#333333', 'secondaryColor':'#f0f0f0', 'tertiaryColor':'#ffffff', 'mainBkgColor':'#ffffff', 'secondBkgColor':'#f5f5f5', 'tertiaryBkgColor':'#ffffff'}}}%%
 graph LR
     subgraph 前端技术["前端技术"]
         Gradio["Gradio 5.49.1<br/>Apache 2.0"]
@@ -133,7 +133,7 @@ graph LR
 ### 核心算法流程
 
 ```mermaid
-%%{init: {'theme':'base', 'themeVariables': {'primaryBackgroundColor':'#ffffff', 'primaryTextColor':'#000000', 'primaryBorderColor':'#333333', 'lineColor':'#333333', 'secondaryColor':'#f0f0f0', 'tertiaryColor':'#ffffff'}}}%%
+%%{init: {'theme':'base', 'themeVariables': {'background':'#ffffff', 'primaryBackgroundColor':'#ffffff', 'primaryTextColor':'#000000', 'primaryBorderColor':'#333333', 'lineColor':'#333333', 'secondaryColor':'#f0f0f0', 'tertiaryColor':'#ffffff', 'mainBkgColor':'#ffffff', 'secondBkgColor':'#f5f5f5', 'tertiaryBkgColor':'#ffffff'}}}%%
 flowchart TD
     Start([用户登录系统]) --> Auth{身份验证}
     Auth -->|学生| StudentFlow[学生流程]
@@ -178,7 +178,7 @@ flowchart TD
 ### 系统架构
 
 ```mermaid
-%%{init: {'theme':'base', 'themeVariables': {'primaryBackgroundColor':'#ffffff', 'primaryTextColor':'#000000', 'primaryBorderColor':'#333333', 'lineColor':'#333333', 'secondaryColor':'#f0f0f0', 'tertiaryColor':'#ffffff'}}}%%
+%%{init: {'theme':'base', 'themeVariables': {'background':'#ffffff', 'primaryBackgroundColor':'#ffffff', 'primaryTextColor':'#000000', 'primaryBorderColor':'#333333', 'lineColor':'#333333', 'secondaryColor':'#f0f0f0', 'tertiaryColor':'#ffffff', 'mainBkgColor':'#ffffff', 'secondBkgColor':'#f5f5f5', 'tertiaryBkgColor':'#ffffff'}}}%%
 graph TB
     subgraph 前端层["前端层"]
         UI[Gradio UI界面<br/>enhanced_main_ui.py]
