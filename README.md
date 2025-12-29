@@ -67,8 +67,10 @@
 
 ### 主要技术栈
 
+<div style="background-color: #ffffff; padding: 15px; border-radius: 5px;">
+
 ```mermaid
-%%{init: {'theme':'base', 'themeVariables': {'background':'#ffffff', 'primaryBackgroundColor':'#ffffff', 'primaryTextColor':'#000000', 'primaryBorderColor':'#333333', 'lineColor':'#333333', 'secondaryColor':'#f0f0f0', 'tertiaryColor':'#ffffff', 'mainBkgColor':'#ffffff', 'secondBkgColor':'#f5f5f5', 'tertiaryBkgColor':'#ffffff'}}}%%
+%%{init: {'theme':'base', 'themeVariables': {'primaryBackgroundColor':'#ffffff', 'primaryTextColor':'#000000', 'primaryBorderColor':'#333333', 'lineColor':'#000000', 'secondaryColor':'#f0f0f0', 'tertiaryColor':'#ffffff', 'mainBkgColor':'#ffffff', 'secondBkgColor':'#f5f5f5', 'tertiaryBkgColor':'#ffffff'}}}%%
 graph LR
     subgraph 前端技术["前端技术"]
         Gradio["Gradio 5.49.1<br/>Apache 2.0"]
@@ -130,10 +132,14 @@ graph LR
     style NPU fill:#E0E0E0
 ```
 
+</div>
+
 ### 核心算法流程
 
+<div style="background-color: #ffffff; padding: 15px; border-radius: 5px;">
+
 ```mermaid
-%%{init: {'theme':'base', 'themeVariables': {'background':'#ffffff', 'primaryBackgroundColor':'#ffffff', 'primaryTextColor':'#000000', 'primaryBorderColor':'#333333', 'lineColor':'#333333', 'secondaryColor':'#f0f0f0', 'tertiaryColor':'#ffffff', 'mainBkgColor':'#ffffff', 'secondBkgColor':'#f5f5f5', 'tertiaryBkgColor':'#ffffff'}}}%%
+%%{init: {'theme':'base', 'themeVariables': {'primaryBackgroundColor':'#ffffff', 'primaryTextColor':'#000000', 'primaryBorderColor':'#333333', 'lineColor':'#000000', 'secondaryColor':'#f0f0f0', 'tertiaryColor':'#ffffff', 'mainBkgColor':'#ffffff', 'secondBkgColor':'#f5f5f5', 'tertiaryBkgColor':'#ffffff'}}}%%
 flowchart TD
     Start([用户登录系统]) --> Auth{身份验证}
     Auth -->|学生| StudentFlow[学生流程]
@@ -175,10 +181,14 @@ flowchart TD
     style Manage fill:#E1BEE7
 ```
 
+</div>
+
 ### 系统架构
 
+<div style="background-color: #ffffff; padding: 15px; border-radius: 5px;">
+
 ```mermaid
-%%{init: {'theme':'base', 'themeVariables': {'background':'#ffffff', 'primaryBackgroundColor':'#ffffff', 'primaryTextColor':'#000000', 'primaryBorderColor':'#333333', 'lineColor':'#333333', 'secondaryColor':'#f0f0f0', 'tertiaryColor':'#ffffff', 'mainBkgColor':'#ffffff', 'secondBkgColor':'#f5f5f5', 'tertiaryBkgColor':'#ffffff'}}}%%
+%%{init: {'theme':'base', 'themeVariables': {'primaryBackgroundColor':'#ffffff', 'primaryTextColor':'#000000', 'primaryBorderColor':'#333333', 'lineColor':'#000000', 'secondaryColor':'#f0f0f0', 'tertiaryColor':'#ffffff', 'mainBkgColor':'#ffffff', 'secondBkgColor':'#f5f5f5', 'tertiaryBkgColor':'#ffffff'}}}%%
 graph TB
     subgraph 前端层["前端层"]
         UI[Gradio UI界面<br/>enhanced_main_ui.py]
@@ -223,6 +233,8 @@ graph TB
     style LLM fill:#E1BEE7
     style Embed fill:#E1BEE7
 ```
+
+</div>
 
 ## 💻 系统要求
 
