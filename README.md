@@ -63,7 +63,110 @@
 
 ### 核心技术栈
 
-![技术栈](img/技术栈.png)
+
+### 系统架构图
+
+```mermaid
+%%{init: {'theme':'base', 'themeVariables': {'primaryBackgroundColor':'#ffffff', 'primaryTextColor':'#000000', 'primaryBorderColor':'#333333', 'lineColor':'#333333', 'edgeLabelBackground':'#ffffff', 'secondaryColor':'#f0f0f0', 'tertiaryColor':'#ffffff', 'mainBkgColor':'#ffffff', 'secondBkgColor':'#f5f5f5', 'tertiaryBkgColor':'#ffffff', 'background':'#ffffff', 'primaryColor':'#ffffff'}}}%%
+graph TB
+    subgraph 前端层["前端层"]
+        GradioUI["Gradio Web UI<br/>enhanced_main_ui.py<br/>交互式Web界面"]
+        Login["登录注册系统<br/>用户认证与权限管理"]
+    end
+    
+    subgraph 应用层["应用层"]
+        SystemCore["System Core<br/>system_core_db.py<br/>系统核心协调器"]
+        BKT["BKT算法适配器<br/>bkt_database_adapter.py<br/>贝叶斯知识追踪"]
+        RAG["RAG引擎<br/>rag_engine.py<br/>基于知识图谱的检索"]
+        KG["知识图谱构建器<br/>kg_builder.py<br/>实体关系提取与图谱构建"]
+        Selector["题目选择器<br/>question_generator.py<br/>智能推荐+题目互选"]
+        Evaluator["评估器<br/>evaluator.py<br/>答案评判+学习分析+报告生成"]
+        Visualizer["可视化器<br/>kg_visualizer.py<br/>radar_chart.py<br/>知识图谱+雷达图可视化"]
+    end
+    
+    subgraph AI模型层["AI模型层"]
+        Pangu["OpenPangu 7B<br/>llm_models.py<br/>• 实体关系提取<br/>• 题目互选<br/>• 答案评判<br/>• 分析总结"]
+        BGE["BGE-small-zh-v1.5<br/>embedding_model.py<br/>文本向量化"]
+    end
+    
+    subgraph 数据层["数据层"]
+        DB[("SQLite数据库<br/>database.py<br/>• 用户表<br/>• 题目表<br/>• 答题记录表<br/>• 学生状态表")]
+        Cache[("知识图谱缓存<br/>knowledge_graph.pkl<br/>实体关系图")]
+        Hash[("知识图谱哈希<br/>kg_hash.txt<br/>检测题库更新")]
+        VectorIndex[("向量索引<br/>内存存储<br/>题目向量检索")]
+    end
+    
+    subgraph 硬件层["硬件层"]
+        NPU["昇腾910B2 NPU<br/>AI模型加速"]
+    end
+    
+    %% 前端到核心
+    GradioUI --> Login
+    Login --> SystemCore
+    
+    %% 系统核心初始化各组件
+    SystemCore --> BKT
+    SystemCore --> RAG
+    SystemCore --> KG
+    SystemCore --> Selector
+    SystemCore --> Evaluator
+    SystemCore --> Visualizer
+    
+    %% 数据存储关系
+    BKT --> DB
+    SystemCore --> DB
+    KG --> Cache
+    KG --> Hash
+    RAG --> VectorIndex
+    
+    %% RAG引擎相关连接
+    RAG --> DB
+    RAG --> BGE
+    RAG --> Pangu
+    RAG --> Cache
+    BGE --> VectorIndex
+    
+    %% 知识图谱构建器相关连接
+    KG --> DB
+    KG --> Pangu
+    KG --> Cache
+    
+    %% 题目选择器相关连接
+    Selector --> RAG
+    Selector --> BKT
+    Selector --> Pangu
+    Selector --> DB
+    
+    %% 评估器相关连接
+    Evaluator --> Pangu
+    Evaluator --> BKT
+    Evaluator --> DB
+    
+    %% 可视化器相关连接
+    Visualizer --> Cache
+    Visualizer --> DB
+    
+    %% 硬件加速
+    Pangu --> NPU
+    BGE --> NPU
+    
+    style GradioUI fill:#E3F2FD
+    style Login fill:#C8E6C9
+    style SystemCore fill:#F3E5F5
+    style Pangu fill:#FFF3E0
+    style BGE fill:#FFF3E0
+    style NPU fill:#E0E0E0
+    style RAG fill:#E1BEE7
+    style Selector fill:#E1BEE7
+    style Evaluator fill:#E1BEE7
+    style Visualizer fill:#E1BEE7
+    style BKT fill:#C8E6C9
+    style KG fill:#BBDEFB
+    style DB fill:#FFE0B2
+    style Cache fill:#FFE0B2
+    style Hash fill:#FFE0B2
+    style VectorIndex fill:#FFE0B2
+```
 
 ### 主要技术栈
 
